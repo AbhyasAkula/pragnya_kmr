@@ -7,6 +7,10 @@ const staticRoutes: { path: `/${string}`; priority: number }[] = [
   { path: "/villas", priority: 0.9 },
   { path: "/master-plan", priority: 0.8 },
   { path: "/amenities", priority: 0.8 },
+  { path: "/gallery", priority: 0.7 },
+  { path: "/construction-progress", priority: 0.7 },
+  { path: "/about", priority: 0.6 },
+  { path: "/contact", priority: 0.8 },
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

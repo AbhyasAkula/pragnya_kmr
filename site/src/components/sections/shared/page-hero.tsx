@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { CSSProperties, ReactNode } from "react";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import type { Crumb } from "@/lib/seo";
+import { cn } from "@/lib/utils";
 import type { ImageAsset } from "@/types/content";
 
 type PageHeroProps = {
@@ -13,27 +14,38 @@ type PageHeroProps = {
   breadcrumbs: Crumb[];
   /** Actions, facts strip or other content under the intro. */
   children?: ReactNode;
+  /** Shorter hero for utility pages (e.g. Contact) so actions appear sooner. */
+  compact?: boolean;
 };
 
-/** Same cadence as the homepage hero: 0.2s lead-in, 0.12s between lines. */
-const riseDelay = (step: number): CSSProperties => ({ animationDelay: `${0.2 + step * 0.12}s` });
+/** Same gentle cadence as the homepage hero: 0.15s lead-in, 0.1s between lines. */
+const riseDelay = (step: number): CSSProperties => ({ animationDelay: `${0.15 + step * 0.1}s` });
 
 /**
  * Interior-page hero in the homepage's visual language (full-bleed image,
  * ink scrims, gold eyebrow, serif headline with italic accent). Server
  * component; entrance uses CSS keyframes so content never waits for JS.
  */
-export function PageHero({ eyebrow, title, accent, description, image, breadcrumbs, children }: PageHeroProps) {
+export function PageHero({ eyebrow, title, accent, description, image, breadcrumbs, children, compact = false }: PageHeroProps) {
   return (
     <section
       aria-labelledby="page-title"
-      className="relative isolate flex min-h-[78svh] flex-col overflow-hidden bg-ink text-white lg:min-h-[72svh]"
+      className={cn(
+        "relative isolate flex flex-col overflow-hidden bg-ink text-white",
+        compact ? "min-h-[60svh] lg:min-h-[52svh]" : "min-h-[78svh] lg:min-h-[72svh]",
+      )}
     >
       <Image src={image.src} alt={image.alt} fill priority sizes="100vw" className="-z-20 object-cover" />
       <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-b from-ink/75 via-ink/35 to-ink/90" />
       <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-r from-ink/60 via-transparent to-transparent" />
 
-      <div className="container-site flex flex-1 flex-col justify-end pt-32 pb-12 sm:pb-16">
+      {/* Compact heroes leave room at the bottom for content lifted onto the hero edge. */}
+      <div
+        className={cn(
+          "container-site flex flex-1 flex-col justify-end pt-28 lg:pt-32",
+          compact ? "pb-20 sm:pb-28" : "pb-12 sm:pb-16",
+        )}
+      >
         <Breadcrumbs items={breadcrumbs} className="animate-rise" />
         <div className="mt-8 max-w-3xl">
           <p className="eyebrow flex animate-rise items-center gap-4 text-gold-light" style={riseDelay(0)}>

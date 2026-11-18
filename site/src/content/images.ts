@@ -41,4 +41,14 @@ export const images = {
   amenityTennis: unsplash("1595435934249-5df7ed86e1c0"),
   amenityGardenPath: unsplash("1585320806297-9794b3e4eeae"),
   amenityForestTrail: unsplash("1441974231531-c6227db76b6e"),
+
+  // Construction progress (sample updates)
+  constructionEarthworks: unsplash("1517089596392-fb9a9033e05b"),
+  constructionSiteLayout: unsplash("1541888946425-d81bb19240f5"),
+  constructionSlab: unsplash("1504307651254-35680f356dfd"),
+  constructionColumns: unsplash("1531834685032-c34bf0d84c77"),
+  constructionServices: unsplash("1621905251189-08b45d6a269e"),
+
+  // About
+  aboutPlanning: unsplash("1503387762-592deb58ef4e"),
 } as const;

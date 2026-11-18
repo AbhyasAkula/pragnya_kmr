@@ -101,3 +101,83 @@ export const amenitiesPage = {
     description: "Book a site visit to tour the clubhouse, pools and gardens.",
   } satisfies SectionCopy,
 };
+
+export const galleryPage = {
+  hero: {
+    eyebrow: "Gallery",
+    title: "Life at Aurelia,",
+    accent: "in pictures",
+    description: "Villas, interiors, amenities and the community — every image labelled as a render or a photograph.",
+    image: { src: images.galleryTerrace, alt: "Three-storey villa with glass balustrades and a large pool" },
+  } satisfies PageIntro,
+  browse: {
+    eyebrow: "Browse",
+    title: "Photos and",
+    accent: "videos",
+    description: "Filter by category, then select any image to view it full screen.",
+  } satisfies SectionCopy,
+  cta: {
+    eyebrow: "See it for yourself",
+    title: "Nothing compares to",
+    accent: "a visit",
+    description: "Tour the show villa and walk the community with our team.",
+  } satisfies SectionCopy,
+};
+
+export const constructionPage = {
+  hero: {
+    eyebrow: "Construction progress",
+    title: "Building Aurelia,",
+    accent: "step by step",
+    description: "Regular updates from site, with milestones, photographs and videos.",
+    image: { src: images.constructionSiteLayout, alt: "Aerial view of a construction site with the site team" },
+  } satisfies PageIntro,
+  latest: { eyebrow: "Latest update", title: "Where things", accent: "stand today" } satisfies SectionCopy,
+  milestones: { eyebrow: "Milestones", title: "From groundbreaking to", accent: "handover" } satisfies SectionCopy,
+  history: { eyebrow: "Earlier updates", title: "Progress", accent: "so far" } satisfies SectionCopy,
+  cta: {
+    eyebrow: "Visit the site",
+    title: "See the progress",
+    accent: "in person",
+    description: "Site visits include a walk past active construction with our project team.",
+  } satisfies SectionCopy,
+};
+
+export const aboutPage = {
+  hero: {
+    eyebrow: "About us",
+    title: "A developer",
+    accent: "built on care",
+    description: "The people and principles behind Aurelia Enclave.",
+    image: { src: images.aboutPlanning, alt: "Architect reviewing drawings at a drafting table" },
+  } satisfies PageIntro,
+  storyImage: { src: images.exteriorTimberFacade, alt: "Contemporary villa with timber screens behind a gated driveway" },
+  values: { eyebrow: "What guides us", title: "Our", accent: "values" } satisfies SectionCopy,
+  project: {
+    eyebrow: "Our first project",
+    title: "Introducing",
+    accent: siteConfig.name,
+  } satisfies SectionCopy,
+  cta: {
+    eyebrow: "Meet the team",
+    title: "We would love to",
+    accent: "show you around",
+    description: "Book a site visit or reach us on WhatsApp — whichever is easiest for you.",
+  } satisfies SectionCopy,
+};
+
+export const contactPage = {
+  hero: {
+    eyebrow: "Contact our sales team",
+    title: "Let's find",
+    accent: "your villa",
+    description: "Chat on WhatsApp, call us directly, or book a private site visit.",
+    image: { src: images.siteVisit, alt: "Two-storey villa reflected in a pool under a cloudy sky" },
+  } satisfies PageIntro,
+  form: {
+    eyebrow: "Book a site visit",
+    title: "See it",
+    accent: "in person",
+    description: "Choose a date and our team will confirm your private tour, including a complimentary pick-up.",
+  } satisfies SectionCopy,
+};

@@ -52,6 +52,10 @@ src/
 | Colours, fonts, spacing, easing | `src/app/globals.css` (`@theme`) and `src/config/fonts.ts` |
 | Brand name, logo text, contact, address, RERA, socials | `src/config/site.ts` |
 | Site URL | `NEXT_PUBLIC_SITE_URL` env var |
+| Phone / WhatsApp / email | `NEXT_PUBLIC_CONTACT_PHONE`, `NEXT_PUBLIC_CONTACT_WHATSAPP`, `NEXT_PUBLIC_CONTACT_EMAIL` (fallbacks in `src/config/site.ts`) |
+| Company story, vision, values | `src/content/company.ts` |
+| Gallery items | `src/content/gallery.ts` |
+| Construction updates & milestones | `src/content/construction.ts` |
 | Nav links | `src/config/navigation.ts` |
 | Headline numbers (acres, clubhouse size…) | `src/content/project.ts` (villa count is derived from unit counts) |
 | Homepage section copy, gallery | `src/content/home.ts` |
@@ -59,6 +63,7 @@ src/
 | Amenities (full list, categories, feature bands) | `src/content/amenities.ts` |
 | Master plan zones / approved plan image | `src/content/master-plan.ts` |
 | Interior page heroes & section copy | `src/content/pages.ts` |
+| Images | `src/content/images.ts` (and `images.remotePatterns` in `next.config.ts` if not self-hosted) |
 
 ## Pages
 
@@ -69,11 +74,14 @@ src/
 | `/villas/[slug]` | Prerendered per villa: gallery (lightbox), floor-plan tabs, specifications, enquiry form pre-selecting the villa |
 | `/master-plan` | Zoomable plan + numbered legend, highlights, models by precinct |
 | `/amenities` | Feature bands + categorised amenity cards |
+| `/gallery` | Category filters (Villas, Interiors, Amenities, Community); every item labelled render or photo; video support |
+| `/construction-progress` | Latest update featured, milestones, earlier updates with media — clearly labelled SAMPLE data |
+| `/about` | Company story, vision, values, quality commitments (company data in `src/content/company.ts`) |
+| `/contact` | WhatsApp (`wa.me`), Call (`tel:`), email, site office + form switcher. `?type=visit` selects the visit form; `&villa=<slug>` pre-selects a villa |
 
 **Placeholders, by design:** floor plans render a labelled "Floor plan coming soon" frame until a level gets a
 `drawing`; the master plan renders an abstract, watermarked zoning diagram until `masterPlan.drawing` is set.
 Neither invents an architectural layout.
-| Images | `src/content/images.ts` (and `images.remotePatterns` in `next.config.ts` if not self-hosted) |
 
 Set `NEXT_PUBLIC_SITE_URL` in production for correct canonical/OG/sitemap URLs.
 

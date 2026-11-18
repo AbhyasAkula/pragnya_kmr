@@ -40,6 +40,12 @@ for (const dir of scanDirs) {
   }
 }
 
+for (const key of ["NEXT_PUBLIC_CONTACT_PHONE", "NEXT_PUBLIC_CONTACT_EMAIL"]) {
+  if (!process.env[key]) findings.push(`env  ${key} is not set (placeholder contact detail in use)`);
+}
+if (/sample: true/.test(readFileSync(join(root, "src/content/construction.ts"), "utf8"))) {
+  findings.push("src/content/construction.ts  sample construction updates shown — replace with real site reports");
+}
 if (!process.env.NEXT_PUBLIC_SITE_URL) {
   findings.push("env  NEXT_PUBLIC_SITE_URL is not set (site will be noindex, no canonical URLs)");
 }

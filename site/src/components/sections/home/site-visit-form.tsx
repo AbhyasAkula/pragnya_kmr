@@ -116,21 +116,6 @@ function EnquiryForm({ villaOptions, defaultVilla, onReset }: SiteVisitFormProps
         />
       </Field>
 
-      <Field id="email" label="Email" optional error={errors.email}>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          maxLength={siteVisitLimits.email}
-          defaultValue={values.email}
-          aria-invalid={Boolean(errors.email)}
-          aria-describedby={describedBy("email")}
-          className={inputClass}
-          placeholder="you@example.com"
-        />
-      </Field>
-
       <Field id="date" label="Preferred date" error={errors.date}>
         <input
           ref={dateRef}
@@ -145,7 +130,7 @@ function EnquiryForm({ villaOptions, defaultVilla, onReset }: SiteVisitFormProps
         />
       </Field>
 
-      <Field id="villa" label="Interested in" optional error={errors.villa}>
+      <Field id="villa" label="Villa of interest" optional error={errors.villa} className="sm:col-span-2">
         <select
           id="villa"
           name="villa"
@@ -165,6 +150,26 @@ function EnquiryForm({ villaOptions, defaultVilla, onReset }: SiteVisitFormProps
             </option>
           ))}
         </select>
+      </Field>
+
+      <Field
+        id="message"
+        label="Message"
+        optional
+        error={errors.message}
+        className="sm:col-span-2"
+      >
+        <textarea
+          id="message"
+          name="message"
+          rows={4}
+          maxLength={siteVisitLimits.message}
+          defaultValue={values.message}
+          aria-invalid={Boolean(errors.message)}
+          aria-describedby={describedBy("message")}
+          className={cn(inputClass, "min-h-28 resize-y")}
+          placeholder="Anything we should know before your visit?"
+        />
       </Field>
 
       {/* Honeypot — hidden from people and assistive tech */}

@@ -1,7 +1,6 @@
 import { ButtonLink } from "@/components/ui/button";
 import { RevealGroup, RevealItem } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/ui/section-heading";
-import { primaryCta } from "@/config/navigation";
 import { VillaCard } from "@/components/villas/villa-card";
 import type { VillaModel, VillaSectionContent } from "@/types/content";
 
@@ -13,7 +12,7 @@ export function VillaShowcase({ villas, ctaLabel, priceNote, ...heading }: Villa
       <div className="container-site">
         <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
           <SectionHeading id="villas-title" {...heading} />
-          <ButtonLink href={primaryCta.href} variant="outline" className="self-start md:self-auto">
+          <ButtonLink href="/contact" variant="outline" className="self-start md:self-auto">
             {ctaLabel}
           </ButtonLink>
         </div>

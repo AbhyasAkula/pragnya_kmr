@@ -23,6 +23,7 @@ import {
   getVillaSlugs,
   getVillaSpecifications,
 } from "@/lib/data";
+import { contactHref } from "@/lib/contact";
 import { breadcrumbJsonLd, pageMetadata, villaJsonLd, type Crumb } from "@/lib/seo";
 import { cn, formatPriceINR } from "@/lib/utils";
 
@@ -73,7 +74,7 @@ export default async function VillaPage({ params }: PageProps<"/villas/[slug]">)
         breadcrumbs={crumbs}
       >
         <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:gap-4">
-          <ButtonLink href="#site-visit" size="lg">
+          <ButtonLink href={contactHref(villa.slug)} size="lg">
             Book a site visit
           </ButtonLink>
           <ButtonLink href="#floor-plans" variant="outline-light" size="lg">
@@ -117,7 +118,7 @@ export default async function VillaPage({ params }: PageProps<"/villas/[slug]">)
               <p className="font-display text-4xl text-ink tabular-nums">{formatPriceINR(villa.startingPrice)}*</p>
               <VillaSpecList villa={villa} className="mt-6 border-t border-line" />
               <div className="mt-8 flex flex-col gap-3">
-                <ButtonLink href="#site-visit" variant="dark" className="w-full">
+                <ButtonLink href={contactHref(villa.slug)} variant="dark" className="w-full">
                   Book a site visit
                 </ButtonLink>
                 <ButtonLink href="#floor-plans" variant="outline" className="w-full">

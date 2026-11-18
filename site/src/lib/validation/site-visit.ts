@@ -1,14 +1,15 @@
 /** Shared between the server action, the form UI and (future) admin/API consumers. */
 import { addDays, isValidIsoDate } from "@/lib/dates";
 
-export const siteVisitFields = ["name", "phone", "email", "date", "villa"] as const;
+/** Site-visit booking fields. Order = focus order for the first invalid field. */
+export const siteVisitFields = ["name", "phone", "date", "villa", "message"] as const;
 export type SiteVisitField = (typeof siteVisitFields)[number];
 
 /** Limits mirrored as `maxLength` on the inputs. */
 export const siteVisitLimits = {
   name: 80,
   phone: 20,
-  email: 254,
+  message: 1000,
   /** How far ahead a visit can be requested. */
   maxDaysAhead: 180,
 } as const;
@@ -17,9 +18,9 @@ export type SiteVisitRequest = {
   name: string;
   /** Digits only, with a leading "+" when the visitor supplied a country code. */
   phone: string;
-  email: string | null;
   date: string; // YYYY-MM-DD
   villa: string | null;
+  message: string | null;
 };
 
 export type SiteVisitState = {
@@ -30,8 +31,6 @@ export type SiteVisitState = {
   errors?: Partial<Record<SiteVisitField, string>>;
   values?: Partial<Record<SiteVisitField, string>>;
 };
-
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Strips spaces, dashes, dots and brackets; keeps a leading "+". */
 export function normalizePhone(raw: string): string {
@@ -55,9 +54,9 @@ export function validateSiteVisit(
   const name = input.name.trim().replace(/\s+/g, " ");
   const rawPhone = input.phone.trim();
   const phone = normalizePhone(rawPhone);
-  const email = input.email.trim();
   const date = input.date.trim();
   const villa = input.villa.trim();
+  const message = input.message.trim();
   const latest = addDays(today, siteVisitLimits.maxDaysAhead);
 
   if (name.length < 2 || name.length > siteVisitLimits.name || !/\p{L}/u.test(name)) {
@@ -74,10 +73,6 @@ export function validateSiteVisit(
     errors.phone = "Enter a valid phone number, e.g. +91 98765 43210.";
   }
 
-  if (email && (email.length > siteVisitLimits.email || !EMAIL.test(email))) {
-    errors.email = "Enter a valid email address or leave it blank.";
-  }
-
   if (!date) errors.date = "Choose a preferred visit date.";
   else if (!isValidIsoDate(date)) errors.date = "Enter a valid date.";
   else if (date < today) errors.date = "Please pick today or a future date.";
@@ -85,10 +80,16 @@ export function validateSiteVisit(
     errors.date = `Please pick a date within the next ${siteVisitLimits.maxDaysAhead} days.`;
   }
 
+  if (message.length > siteVisitLimits.message) {
+    errors.message = `Please keep your message under ${siteVisitLimits.message} characters.`;
+  }
+
   if (villa && !villaOptions.includes(villa)) {
     errors.villa = "Please choose a villa from the list.";
   }
 
   if (Object.keys(errors).length > 0) return { errors };
-  return { data: { name, phone, email: email || null, date, villa: villa || null } };
+  return {
+    data: { name, phone, date, villa: villa || null, message: message || null },
+  };
 }

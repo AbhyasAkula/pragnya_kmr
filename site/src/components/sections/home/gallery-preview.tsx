@@ -4,6 +4,7 @@ import { AnimatePresence } from "motion/react";
 import { Expand } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useRef, useState } from "react";
+import { ButtonLink } from "@/components/ui/button";
 import { RevealGroup, RevealItem } from "@/components/ui/reveal";
 import { Lightbox } from "@/components/ui/lightbox";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -76,6 +77,12 @@ export function GalleryPreview({ images, ...heading }: GalleryPreviewProps) {
             );
           })}
         </RevealGroup>
+
+        <div className="mt-12 flex justify-center">
+          <ButtonLink href="/gallery" variant="outline" size="lg">
+            View full gallery
+          </ButtonLink>
+        </div>
       </div>
 
       <AnimatePresence>

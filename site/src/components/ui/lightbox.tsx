@@ -1,14 +1,16 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clapperboard, X } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useRef } from "react";
 import { duration, easeLuxe } from "@/config/motion";
 import { cn } from "@/lib/utils";
-import type { ImageAsset } from "@/types/content";
+import type { MediaItem, MediaSource } from "@/types/content";
+import { MediaBadge } from "./media-badge";
 
-export type LightboxImage = ImageAsset & { id: string; caption: string };
+/** Anything the lightbox can show: an image, or a video (with poster in `src`). */
+export type LightboxImage = Omit<MediaItem, "source"> & { source?: MediaSource };
 
 type LightboxProps = {
   images: LightboxImage[];
@@ -17,7 +19,10 @@ type LightboxProps = {
   onClose: () => void;
 };
 
-/** Full-screen image viewer: Escape closes, arrow keys navigate, focus is trapped. */
+/**
+ * Full-screen viewer for photos and videos: Escape closes, arrow keys
+ * navigate, focus is trapped. Shows the render/photo label when provided.
+ */
 export function Lightbox({ images, index, onIndexChange, onClose }: LightboxProps) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -41,7 +46,9 @@ export function Lightbox({ images, index, onIndexChange, onClose }: LightboxProp
       else if (e.key === "ArrowLeft") prev();
       else if (e.key === "ArrowRight") next();
       else if (e.key === "Tab" && dialogRef.current) {
-        const focusables = dialogRef.current.querySelectorAll<HTMLElement>("button");
+        const focusables = [...dialogRef.current.querySelectorAll<HTMLElement>("button, video[controls]")].filter(
+          (el) => el.offsetParent !== null,
+        );
         const first = focusables[0];
         const last = focusables[focusables.length - 1];
         if (e.shiftKey && document.activeElement === first) {
@@ -57,6 +64,7 @@ export function Lightbox({ images, index, onIndexChange, onClose }: LightboxProp
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose, prev, next]);
 
+  const isVideo = image.kind === "video";
   const control =
     "inline-flex size-12 items-center justify-center rounded-full border border-white/25 text-white transition-colors hover:border-white hover:bg-white hover:text-ink";
 
@@ -65,7 +73,7 @@ export function Lightbox({ images, index, onIndexChange, onClose }: LightboxProp
       ref={dialogRef}
       role="dialog"
       aria-modal="true"
-      aria-label={`Gallery image ${index + 1} of ${count}: ${image.caption}`}
+      aria-label={`Gallery ${isVideo ? "video" : "image"} ${index + 1} of ${count}: ${image.caption}`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -82,29 +90,56 @@ export function Lightbox({ images, index, onIndexChange, onClose }: LightboxProp
         </button>
       </div>
 
-      <div className="relative flex flex-1 items-center justify-center px-4 pb-6 sm:px-20" onClick={(e) => e.stopPropagation()}>
+      {/* Stage: media on top; caption row below. On phones the prev/next buttons
+          sit in the caption row (no overlap); from `sm` they float at the sides. */}
+      <div
+        className="relative grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)_auto] gap-4 px-4 pb-6 sm:px-20"
+        onClick={(e) => e.stopPropagation()}
+      >
         <AnimatePresence mode="wait" initial={false}>
-          <motion.figure
+          <motion.div
             key={image.id}
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: duration.fast, ease: easeLuxe }}
-            className="flex size-full max-w-6xl flex-col"
+            className="relative mx-auto size-full max-w-6xl"
           >
-            <div className="relative flex-1">
-              <Image src={image.src} alt={image.alt} fill sizes="100vw" className="object-contain" />
-            </div>
-            <figcaption className="mt-4 text-center font-display text-2xl text-ivory">{image.caption}</figcaption>
-          </motion.figure>
+            {isVideo && image.video?.src ? (
+              <video
+                src={image.video.src}
+                poster={image.src}
+                controls
+                playsInline
+                preload="metadata"
+                className="size-full object-contain"
+                aria-label={image.caption}
+              />
+            ) : (
+              <Image src={image.src} alt={image.alt} fill sizes="100vw" className={cn("object-contain", isVideo && "opacity-40")} />
+            )}
+            {isVideo && !image.video?.src ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-ivory">
+                <Clapperboard className="size-10 text-gold-light" strokeWidth={1.25} aria-hidden />
+                <p className="mt-4 font-display text-3xl">Video coming soon</p>
+                <p className="mt-2 max-w-sm text-sm text-mist">This is a placeholder. The film will appear here once it is published.</p>
+              </div>
+            ) : null}
+          </motion.div>
         </AnimatePresence>
 
-        <button type="button" onClick={prev} aria-label="Previous image" className={cn(control, "absolute bottom-8 left-4 sm:top-1/2 sm:bottom-auto sm:-translate-y-1/2")}>
-          <ChevronLeft className="size-5" aria-hidden />
-        </button>
-        <button type="button" onClick={next} aria-label="Next image" className={cn(control, "absolute right-4 bottom-8 sm:top-1/2 sm:bottom-auto sm:-translate-y-1/2")}>
-          <ChevronRight className="size-5" aria-hidden />
-        </button>
+        <div className="flex items-center justify-between gap-3">
+          <button type="button" onClick={prev} aria-label="Previous" className={cn(control, "shrink-0 sm:absolute sm:top-1/2 sm:left-4 sm:-translate-y-1/2")}>
+            <ChevronLeft className="size-5" aria-hidden />
+          </button>
+          <div className="flex min-w-0 flex-1 flex-col items-center gap-2 text-center">
+            <p className="font-display text-xl text-ivory sm:text-2xl">{image.caption}</p>
+            {image.source ? <MediaBadge source={image.source} isVideo={isVideo} long /> : null}
+          </div>
+          <button type="button" onClick={next} aria-label="Next" className={cn(control, "shrink-0 sm:absolute sm:top-1/2 sm:right-4 sm:-translate-y-1/2")}>
+            <ChevronRight className="size-5" aria-hidden />
+          </button>
+        </div>
       </div>
     </motion.div>
   );

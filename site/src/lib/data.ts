@@ -4,6 +4,9 @@
  * database or the admin dashboard API without touching the UI.
  */
 import * as amenityContent from "@/content/amenities";
+import { company } from "@/content/company";
+import * as construction from "@/content/construction";
+import * as galleryContent from "@/content/gallery";
 import * as home from "@/content/home";
 import { masterPlan } from "@/content/master-plan";
 import * as pages from "@/content/pages";
@@ -32,7 +35,8 @@ export async function getAmenities() {
 }
 
 export async function getGalleryPreview(limit = 6) {
-  return { ...home.gallerySection, images: home.gallery.slice(0, limit) };
+  const featured = galleryContent.gallery.filter((g) => g.featured && g.kind !== "video");
+  return { ...home.gallerySection, images: featured.slice(0, limit) };
 }
 
 export async function getSiteVisitContent() {
@@ -100,4 +104,40 @@ export async function getAmenitiesPageContent() {
     amenities: amenityContent.amenities,
     features: amenityContent.amenityFeatures,
   };
+}
+
+/* -------------------------------- Gallery ------------------------------- */
+
+export async function getGalleryPageContent() {
+  return {
+    ...pages.galleryPage,
+    categories: galleryContent.galleryCategories,
+    items: galleryContent.gallery,
+    notice: galleryContent.galleryNotice,
+  };
+}
+
+/* ------------------------- Construction progress ------------------------ */
+
+export async function getConstructionContent() {
+  const [latest, ...earlier] = construction.constructionUpdates;
+  return {
+    ...pages.constructionPage,
+    milestoneList: construction.constructionMilestones,
+    latestUpdate: latest,
+    earlierUpdates: earlier,
+    notice: construction.constructionNotice,
+  };
+}
+
+/* --------------------------------- About -------------------------------- */
+
+export async function getAboutContent() {
+  return { ...pages.aboutPage, company, facts: projectFacts };
+}
+
+/* -------------------------------- Contact ------------------------------- */
+
+export async function getContactContent() {
+  return { ...pages.contactPage, villaOptions: villaContent.villas.map((v) => ({ slug: v.slug, name: v.name })) };
 }

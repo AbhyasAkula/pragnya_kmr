@@ -8,7 +8,6 @@ import { siteConfig } from "@/config/site";
 import { formatNumber, formatPriceINR } from "@/lib/utils";
 import type {
   AmenitiesSectionContent,
-  GalleryImage,
   HeroContent,
   ProjectOverview,
   SectionCopy,
@@ -97,51 +96,6 @@ export const gallerySection: SectionCopy = {
   accent: `life at ${siteConfig.shortName}`,
   description: "Artistic impressions of homes, interiors and landscapes across the enclave.",
 };
-
-export const gallery: GalleryImage[] = [
-  {
-    id: "g-1",
-    src: images.galleryWhiteVilla,
-    alt: "White minimalist villa with glass walls beside a pool",
-    caption: "Poolside living",
-    category: "exteriors",
-  },
-  {
-    id: "g-2",
-    src: images.galleryLounge,
-    alt: "Sunlit lounge with leather sofas and a gallery wall",
-    caption: "Family lounge",
-    category: "interiors",
-  },
-  {
-    id: "g-3",
-    src: images.galleryCourtyard,
-    alt: "Courtyard pool framed by arched verandas at night",
-    caption: "Evening courtyard",
-    category: "landscape",
-  },
-  {
-    id: "g-4",
-    src: images.galleryBedroom,
-    alt: "Master bedroom with an upholstered headboard and bench",
-    caption: "Master suite",
-    category: "interiors",
-  },
-  {
-    id: "g-5",
-    src: images.galleryTerrace,
-    alt: "Three-storey villa with glass balustrades and a large pool",
-    caption: "Signature terraces",
-    category: "exteriors",
-  },
-  {
-    id: "g-6",
-    src: images.galleryVeranda,
-    alt: "Colonial-style villa with a wraparound veranda and palms",
-    caption: "Garden veranda",
-    category: "landscape",
-  },
-];
 
 export const siteVisit: SiteVisitContent = {
   eyebrow: "Private site visits",

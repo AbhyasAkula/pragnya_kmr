@@ -1,4 +1,3 @@
-import { ArrowDown } from "lucide-react";
 import Image from "next/image";
 import type { CSSProperties } from "react";
 import { ButtonLink } from "@/components/ui/button";
@@ -34,13 +33,17 @@ export function Hero({ content }: { content: HeroContent }) {
       <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-b from-ink/70 via-ink/25 to-ink/85" />
       <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-r from-ink/60 via-transparent to-transparent" />
 
-      <div className="container-site flex flex-1 flex-col justify-end pt-32 pb-12 sm:pb-16">
+      <div className="container-site flex flex-1 flex-col justify-end pt-28 pb-8 sm:pb-12 lg:pt-32">
         <div className="max-w-3xl">
           <p className="eyebrow flex animate-rise items-center gap-4 text-gold-light" style={riseDelay(0)}>
             <span aria-hidden className="h-px w-10 bg-current" />
             {content.eyebrow}
           </p>
-          <h1 id="hero-title" className="mt-6 text-[2.75rem] leading-[1.02] sm:text-6xl lg:text-[5.5rem]">
+          {/* On laptops the headline also scales with viewport height so short screens (720–768px) fit. */}
+          <h1
+            id="hero-title"
+            className="mt-5 text-[2.6rem] leading-[1.02] sm:text-6xl lg:text-[clamp(3.75rem,9.5vh,5.5rem)]"
+          >
             <span className="block animate-rise" style={riseDelay(1)}>
               {content.title}
             </span>
@@ -48,10 +51,10 @@ export function Hero({ content }: { content: HeroContent }) {
               {content.titleAccent}
             </span>
           </h1>
-          <p className="mt-6 max-w-xl animate-rise text-base text-white/85 sm:text-lg" style={riseDelay(3)}>
+          <p className="mt-5 max-w-xl animate-rise text-base text-white/85 sm:text-lg" style={riseDelay(3)}>
             {content.subtitle}
           </p>
-          <div className="mt-10 flex animate-rise flex-col gap-3 sm:flex-row sm:gap-4" style={riseDelay(4)}>
+          <div className="mt-8 flex animate-rise flex-col gap-3 sm:flex-row sm:gap-4" style={riseDelay(4)}>
             <ButtonLink href={primaryCta.href} size="lg">
               {primaryCta.label}
             </ButtonLink>
@@ -63,26 +66,18 @@ export function Hero({ content }: { content: HeroContent }) {
 
         <dl
           style={{ animationDelay: "0.7s" }}
-          className="mt-14 grid animate-fade-in grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/15 bg-white/10 backdrop-blur-md sm:mt-20 md:grid-cols-4"
+          className="mt-10 grid animate-fade-in grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/15 bg-white/10 backdrop-blur-md sm:mt-12 md:grid-cols-4"
         >
           {content.facts.map((fact) => (
-            <div key={fact.label} className="flex flex-col gap-1 bg-ink/30 px-6 py-5">
-              <dt className="order-2 text-xs font-semibold tracking-[0.2em] text-white/80 uppercase">
+            <div key={fact.label} className="flex min-w-0 flex-col justify-center gap-1 bg-ink/35 px-4 py-4 sm:px-6 sm:py-5">
+              <dt className="order-2 truncate text-xs font-semibold tracking-[0.14em] text-white/80 uppercase sm:tracking-[0.2em]">
                 {fact.label}
               </dt>
-              <dd className="order-1 font-display text-3xl text-white sm:text-4xl">{fact.value}</dd>
+              <dd className="order-1 font-display text-3xl leading-none text-white tabular-nums sm:text-4xl">{fact.value}</dd>
             </div>
           ))}
         </dl>
       </div>
-
-      <a
-        href="#overview"
-        aria-label="Scroll to overview"
-        className="absolute right-6 bottom-12 hidden size-11 items-center justify-center rounded-full border border-white/30 text-white/80 transition-colors hover:border-white hover:text-white lg:inline-flex xl:right-10"
-      >
-        <ArrowDown className="size-4" aria-hidden />
-      </a>
     </section>
   );
 }

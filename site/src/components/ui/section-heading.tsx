@@ -6,6 +6,8 @@ type SectionHeadingProps = SectionCopy & {
   tone?: "light" | "dark";
   className?: string;
   id?: string;
+  /** Allows programmatic focus (e.g. after a "Book a Site Visit" jump). */
+  focusable?: boolean;
 };
 
 export function SectionHeading({
@@ -17,6 +19,7 @@ export function SectionHeading({
   tone = "light",
   className,
   id,
+  focusable = false,
 }: SectionHeadingProps) {
   const onDark = tone === "dark";
   return (
@@ -33,6 +36,7 @@ export function SectionHeading({
       </p>
       <h2
         id={id}
+        tabIndex={focusable ? -1 : undefined}
         className={cn(
           "mt-5 text-4xl sm:text-5xl lg:text-[3.5rem]",
           onDark ? "text-ivory" : "text-ink",

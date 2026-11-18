@@ -54,7 +54,7 @@ export async function requestSiteVisit(
 
 function successMessage(demo: boolean, name?: string) {
   if (demo) {
-    return `This form is a demo and your details were not sent or stored. To arrange a visit, please call ${siteConfig.contact.phone}.`;
+    return `This form is a demo and your details were not sent or stored. To arrange a visit, please call ${siteConfig.contact.phone} or message us on WhatsApp.`;
   }
   const firstName = name?.split(" ")[0];
   return `Thank you${firstName ? `, ${firstName}` : ""}. A relationship manager will call you within one working day to confirm your visit.`;

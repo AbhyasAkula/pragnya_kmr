@@ -183,10 +183,49 @@ export type MasterPlanZone = {
   villaSlug?: string;
 };
 
-export type GalleryCategory = "exteriors" | "interiors" | "amenities" | "landscape";
+export type GalleryCategory = "villas" | "interiors" | "amenities" | "community";
 
-export type GalleryImage = ImageAsset & {
+/**
+ * Whether a visual is an architectural render (artist's impression) or a
+ * real photograph. Always shown to visitors so the two are never confused.
+ */
+export type MediaSource = "render" | "photo";
+
+/** A photo or video. Videos without `video.src` render as a labelled placeholder. */
+export type MediaItem = ImageAsset & {
   id: string;
   caption: string;
+  source: MediaSource;
+  kind?: "image" | "video";
+  video?: { src?: string; duration?: string };
+};
+
+export type GalleryImage = MediaItem & {
   category: GalleryCategory;
+  /** Included in the homepage gallery preview (in order). */
+  featured?: boolean;
+};
+
+export type ConstructionStatus = "completed" | "in-progress" | "upcoming";
+
+export type ConstructionMilestone = {
+  id: string;
+  title: string;
+  status: ConstructionStatus;
+  /** Display date, e.g. "Mar 2026" or "Target: Dec 2027". */
+  date: string;
+};
+
+export type ConstructionUpdate = {
+  id: string;
+  /** ISO date (YYYY-MM-DD) of the update. */
+  date: string;
+  title: string;
+  summary: string;
+  /** Overall completion at the time of this update, 0–100. */
+  overallProgress: number;
+  areas: { label: string; progress: number }[];
+  media: MediaItem[];
+  /** true while the data is illustrative sample content. */
+  sample: boolean;
 };
