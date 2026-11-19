@@ -1,13 +1,12 @@
 import { Suspense } from "react";
-import { ContactActions, OfficeDetails } from "@/components/contact/contact-options";
+import { ContactActions, ProjectLocationCard, contactCard } from "@/components/contact/contact-options";
 import { ContactVisitForm, ContactVisitFormFallback } from "@/components/contact/contact-visit-form";
 import { SiteShell } from "@/components/layout/site-shell";
 import { PageHero } from "@/components/sections/shared/page-hero";
-import { Reveal } from "@/components/ui/reveal";
-import { SectionHeading } from "@/components/ui/section-heading";
 import { siteConfig } from "@/config/site";
 import { getContactContent } from "@/lib/data";
 import { breadcrumbJsonLd, pageMetadata, type Crumb } from "@/lib/seo";
+import { cn } from "@/lib/utils";
 
 const crumbs: Crumb[] = [
   { label: "Home", href: "/" },
@@ -28,38 +27,45 @@ export async function generateMetadata() {
 }
 
 /**
- * Sales contact page: two prominent actions (WhatsApp, Call), then a single
- * Book a Site Visit form, then slim office details.
+ * Sales contact page.
+ * Desktop: WhatsApp, Call and Project Location cards on the left; the Book a
+ * Site Visit form on the right. Phones: WhatsApp → Call → form → location.
  */
 export default async function ContactPage() {
-  const { hero, form, villaOptions } = await getContactContent();
+  const { hero, form, villaOptions, locationImage } = await getContactContent();
 
   return (
     <SiteShell jsonLd={[breadcrumbJsonLd(crumbs)]}>
-      <PageHero {...hero} breadcrumbs={crumbs} compact />
+      <PageHero {...hero} breadcrumbs={crumbs} size="banner" />
 
-      {/* Primary actions, lifted onto the hero edge so they are seen first */}
-      <section aria-label="Contact our sales team" className="relative z-10 -mt-10 sm:-mt-14">
-        <div className="container-site">
-          <ContactActions className="mx-auto max-w-5xl" />
-        </div>
-      </section>
+      <section aria-label="Contact options and site visit booking" className="py-12 sm:py-16 lg:py-20">
+        <div className="container-site grid gap-5 lg:grid-cols-12 lg:items-start lg:gap-x-10">
+          {/* Left column. On phones `contents` lets its cards interleave with the form
+              (WhatsApp → Call → form → location); on desktop it stays in view beside the form. */}
+          <div className="contents lg:sticky lg:top-28 lg:col-span-5 lg:block lg:space-y-5">
+            <ContactActions className="order-1 lg:order-none" />
+            <ProjectLocationCard image={locationImage} className="order-3 lg:order-none" />
+          </div>
 
-      {/* Book a site visit */}
-      <section id={FORM_ANCHOR} aria-labelledby={FORM_HEADING} className="pt-16 pb-20 sm:pt-20 md:pb-28">
-        <div className="container-site">
-          <div className="mx-auto max-w-3xl">
-            <Reveal>
-              <SectionHeading id={FORM_HEADING} align="center" focusable {...form} />
-            </Reveal>
-            <div className="mt-10 rounded-[1.75rem] border border-line bg-white p-6 shadow-[0_30px_60px_-40px_rgba(28,25,23,0.45)] sm:p-10">
+          {/* Booking form */}
+          <div
+            id={FORM_ANCHOR}
+            className={cn(contactCard, "order-2 p-6 sm:p-8 lg:order-none lg:col-span-7 lg:col-start-6 lg:p-10")}
+          >
+            <p className="eyebrow flex items-center gap-4 text-gold">
+              <span aria-hidden className="h-px w-10 bg-current opacity-60" />
+              {form.eyebrow}
+            </p>
+            <h2 id={FORM_HEADING} tabIndex={-1} className="mt-4 text-4xl text-ink sm:text-[2.75rem]">
+              {form.title}
+            </h2>
+            <p className="mt-3 max-w-md text-stone">{form.description}</p>
+            <div className="mt-8 border-t border-line pt-8">
               <Suspense fallback={<ContactVisitFormFallback villas={villaOptions} />}>
                 <ContactVisitForm villas={villaOptions} anchorId={FORM_ANCHOR} headingId={FORM_HEADING} />
               </Suspense>
             </div>
           </div>
-
-          <OfficeDetails className="mx-auto mt-14 max-w-5xl border-t border-line pt-10" />
         </div>
       </section>
     </SiteShell>

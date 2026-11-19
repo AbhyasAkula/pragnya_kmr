@@ -1,7 +1,17 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { CheckCircle2, Info, Loader2 } from "lucide-react";
+import {
+  CalendarDays,
+  CheckCircle2,
+  House,
+  Info,
+  Loader2,
+  MessageSquareText,
+  Phone,
+  UserRound,
+  type LucideIcon,
+} from "lucide-react";
 import { useActionState, useEffect, useRef, useState, type ReactNode } from "react";
 import { requestSiteVisit } from "@/actions/site-visit";
 import { Button } from "@/components/ui/button";
@@ -22,10 +32,36 @@ const isDemo = !siteConfig.features.leadStorageConnected;
 const inputClass =
   "mt-2 block min-h-12 w-full rounded-xl border border-field bg-white px-4 py-3 text-base text-ink transition-[border-color,box-shadow] duration-300 placeholder:text-placeholder focus:border-gold focus:ring-4 focus:ring-gold-light/30 focus:outline-none aria-invalid:border-danger";
 
+/** Contact-page inputs: squarer corners and room for a leading icon. */
+const contactInputClass =
+  "block min-h-[3.25rem] w-full rounded-xl border border-field/80 bg-white py-3 pr-4 pl-11 text-[0.95rem] text-ink shadow-[inset_0_1px_2px_rgba(28,25,23,0.04)] transition-[border-color,box-shadow] duration-300 placeholder:text-placeholder hover:border-stone focus:border-gold focus:ring-4 focus:ring-gold-light/25 focus:outline-none aria-invalid:border-danger";
+
+/**
+ * Native date input, restyled: the (invisible) browser picker button covers
+ * the whole field, so a click or tap anywhere opens the calendar.
+ */
+const datePickerClass =
+  "relative cursor-pointer [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0";
+
+const chevron = {
+  backgroundImage:
+    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2357534e' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")",
+};
+
+type Appearance = "default" | "contact";
+
 type SiteVisitFormProps = {
   villaOptions: string[];
   /** Pre-selects a villa (e.g. on that villa's detail page). Must be one of `villaOptions`. */
   defaultVilla?: string;
+  /**
+   * "default": homepage / villa pages. "contact": the Contact page design
+   * (title-case labels with icons, leading input icons, pine submit button).
+   * Same fields, validation, demo handling and accessibility either way.
+   */
+  appearance?: Appearance;
+  /** Contact design: villa name → short description (e.g. "3 BHK Villa") for the option cards. */
+  villaDetails?: Record<string, string>;
 };
 
 /** Remounting via `key` gives a clean form (and fresh action state) for a new request. */
@@ -34,7 +70,16 @@ export function SiteVisitForm(props: SiteVisitFormProps) {
   return <EnquiryForm key={round} {...props} onReset={() => setRound((r) => r + 1)} />;
 }
 
-function EnquiryForm({ villaOptions, defaultVilla, onReset }: SiteVisitFormProps & { onReset: () => void }) {
+function EnquiryForm({
+  villaOptions,
+  defaultVilla,
+  appearance = "default",
+  villaDetails = {},
+  onReset,
+}: SiteVisitFormProps & { onReset: () => void }) {
+  const contact = appearance === "contact";
+  const field = (icon: LucideIcon) => (contact ? { appearance, icon } : { appearance });
+  const control = contact ? contactInputClass : inputClass;
   const [state, formAction, pending] = useActionState(requestSiteVisit, initialState);
   const formRef = useRef<HTMLFormElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
@@ -56,7 +101,8 @@ function EnquiryForm({ villaOptions, defaultVilla, onReset }: SiteVisitFormProps
     const first = siteVisitFields.find((f) => state.errors?.[f]);
     if (!first) return;
     const el = formRef.current?.elements.namedItem(first);
-    if (el instanceof HTMLElement) el.focus();
+    if (el instanceof RadioNodeList) (el[0] as HTMLElement | undefined)?.focus();
+    else if (el instanceof HTMLElement) el.focus();
   }, [state]);
 
   if (state.status === "success") {
@@ -67,7 +113,7 @@ function EnquiryForm({ villaOptions, defaultVilla, onReset }: SiteVisitFormProps
 
   return (
     <form ref={formRef} action={formAction} noValidate className="grid gap-5 sm:grid-cols-2">
-      {isDemo ? (
+      {isDemo && !contact ? (
         <p
           id="demo-notice"
           className="flex gap-3 rounded-xl border border-gold/30 bg-gold-light/15 px-4 py-3 text-sm text-ink sm:col-span-2"
@@ -84,7 +130,7 @@ function EnquiryForm({ villaOptions, defaultVilla, onReset }: SiteVisitFormProps
         </p>
       ) : null}
 
-      <Field id="name" label="Full name" error={errors.name} className="sm:col-span-2">
+      <Field id="name" label={contact ? "Full Name" : "Full name"} required error={errors.name} className="sm:col-span-2" {...field(UserRound)}>
         <input
           id="name"
           name="name"
@@ -94,12 +140,12 @@ function EnquiryForm({ villaOptions, defaultVilla, onReset }: SiteVisitFormProps
           defaultValue={values.name}
           aria-invalid={Boolean(errors.name)}
           aria-describedby={describedBy("name")}
-          className={inputClass}
-          placeholder="Your name"
+          className={control}
+          placeholder={contact ? "Enter your name" : "Your name"}
         />
       </Field>
 
-      <Field id="phone" label="Phone" error={errors.phone}>
+      <Field id="phone" label={contact ? "Phone Number" : "Phone"} required error={errors.phone} {...field(Phone)}>
         <input
           id="phone"
           name="phone"
@@ -111,12 +157,12 @@ function EnquiryForm({ villaOptions, defaultVilla, onReset }: SiteVisitFormProps
           defaultValue={values.phone}
           aria-invalid={Boolean(errors.phone)}
           aria-describedby={describedBy("phone")}
-          className={inputClass}
-          placeholder="+91 98765 43210"
+          className={control}
+          placeholder={contact ? "Enter 10-digit number" : "+91 98765 43210"}
         />
       </Field>
 
-      <Field id="date" label="Preferred date" error={errors.date}>
+      <Field id="date" label={contact ? "Preferred Date" : "Preferred date"} required error={errors.date} {...field(CalendarDays)}>
         <input
           ref={dateRef}
           id="date"
@@ -126,39 +172,42 @@ function EnquiryForm({ villaOptions, defaultVilla, onReset }: SiteVisitFormProps
           defaultValue={values.date}
           aria-invalid={Boolean(errors.date)}
           aria-describedby={describedBy("date")}
-          className={inputClass}
+          className={cn(control, contact && datePickerClass)}
         />
+        {contact ? (
+          <CalendarDays className="pointer-events-none absolute top-1/2 right-4 z-10 size-4 -translate-y-1/2 text-gold" strokeWidth={1.75} aria-hidden />
+        ) : null}
       </Field>
 
-      <Field id="villa" label="Villa of interest" optional error={errors.villa} className="sm:col-span-2">
-        <select
-          id="villa"
-          name="villa"
+      {contact ? (
+        <VillaChoice
+          options={villaOptions}
+          details={villaDetails}
           defaultValue={values.villa ?? defaultVilla ?? ""}
-          aria-invalid={Boolean(errors.villa)}
-          aria-describedby={describedBy("villa")}
-          className={cn(inputClass, "appearance-none bg-[length:16px] bg-[right_1rem_center] bg-no-repeat pr-10")}
-          style={{
-            backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2357534e' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")",
-          }}
-        >
-          <option value="">Not sure yet</option>
-          {villaOptions.map((v) => (
-            <option key={v} value={v}>
-              {v}
-            </option>
-          ))}
-        </select>
-      </Field>
+          error={errors.villa}
+        />
+      ) : (
+        <Field id="villa" label="Villa of interest" optional error={errors.villa} className="sm:col-span-2">
+          <select
+            id="villa"
+            name="villa"
+            defaultValue={values.villa ?? defaultVilla ?? ""}
+            aria-invalid={Boolean(errors.villa)}
+            aria-describedby={describedBy("villa")}
+            className={cn(control, "appearance-none bg-[length:16px] bg-[right_1rem_center] bg-no-repeat pr-10")}
+            style={chevron}
+          >
+            <option value="">Not sure yet</option>
+            {villaOptions.map((v) => (
+              <option key={v} value={v}>
+                {v}
+              </option>
+            ))}
+          </select>
+        </Field>
+      )}
 
-      <Field
-        id="message"
-        label="Message"
-        optional
-        error={errors.message}
-        className="sm:col-span-2"
-      >
+      <Field id="message" label="Message" optional error={errors.message} className="sm:col-span-2" {...field(MessageSquareText)} noInputIcon>
         <textarea
           id="message"
           name="message"
@@ -167,8 +216,8 @@ function EnquiryForm({ villaOptions, defaultVilla, onReset }: SiteVisitFormProps
           defaultValue={values.message}
           aria-invalid={Boolean(errors.message)}
           aria-describedby={describedBy("message")}
-          className={cn(inputClass, "min-h-28 resize-y")}
-          placeholder="Anything we should know before your visit?"
+          className={cn(control, "min-h-28 resize-y", contact && "pl-4")}
+          placeholder={contact ? "Let us know your preferred time or any specific request" : "Anything we should know before your visit?"}
         />
       </Field>
 
@@ -198,12 +247,21 @@ function EnquiryForm({ villaOptions, defaultVilla, onReset }: SiteVisitFormProps
           size="lg"
           disabled={pending}
           aria-describedby={isDemo ? "demo-notice" : undefined}
-          className="w-full"
+          className={cn(
+            "w-full",
+            contact &&
+              "min-h-[3.75rem] rounded-xl border border-gold-light/70 bg-ink text-base font-semibold tracking-[0.04em] text-white normal-case shadow-[0_18px_36px_-16px_rgba(28,25,23,0.75)] ring-1 ring-gold-light/20 ring-offset-2 ring-offset-white hover:border-gold-light hover:bg-ink-soft hover:shadow-[0_22px_44px_-18px_rgba(28,25,23,0.85)]",
+          )}
         >
           {pending ? (
             <>
               <Loader2 className="size-4 animate-spin" aria-hidden />
               Sending request…
+            </>
+          ) : contact ? (
+            <>
+              <CalendarDays className="size-5 text-gold-light" strokeWidth={1.5} aria-hidden />
+              Book a Site Visit
             </>
           ) : isDemo ? (
             "Try the demo form"
@@ -211,7 +269,21 @@ function EnquiryForm({ villaOptions, defaultVilla, onReset }: SiteVisitFormProps
             "Schedule my visit"
           )}
         </Button>
-        <p className="mt-4 text-center text-xs text-stone">
+        {isDemo && contact ? (
+          // Contact design: the demo notice sits right under the button, before anyone submits.
+          <p id="demo-notice" className="mt-4 flex items-start gap-2 text-sm text-stone">
+            <Info className="mt-0.5 size-4 shrink-0 text-gold" aria-hidden />
+            <span>
+              <strong className="font-semibold text-ink">Demo mode:</strong> requests are not stored or sent yet. To book
+              now, call{" "}
+              <a href={siteConfig.contact.phoneHref} className="font-semibold whitespace-nowrap text-ink underline underline-offset-2">
+                {siteConfig.contact.phone}
+              </a>
+              .
+            </span>
+          </p>
+        ) : null}
+        <p className={cn("text-xs text-stone", contact ? "mt-2 pl-6" : "mt-4 text-center")}>
           By submitting, you agree to be contacted about {siteConfig.name}. We never share your details.
         </p>
       </div>
@@ -257,11 +329,63 @@ type FieldProps = {
   label: string;
   error?: string;
   optional?: boolean;
+  /** Shows a red asterisk in the contact design (the input itself carries `required`). */
+  required?: boolean;
+  appearance?: Appearance;
+  /** Contact design: small gold icon before the label and inside the input. */
+  icon?: LucideIcon;
+  /** Contact design: keep the label icon but not the in-field icon (e.g. textarea). */
+  noInputIcon?: boolean;
   className?: string;
   children: ReactNode;
 };
 
-function Field({ id, label, error, optional, className, children }: FieldProps) {
+function Field({
+  id,
+  label,
+  error,
+  optional,
+  required,
+  appearance = "default",
+  icon: Icon,
+  noInputIcon,
+  className,
+  children,
+}: FieldProps) {
+  const errorText = error ? (
+    <p id={`${id}-error`} className="mt-2 text-sm text-danger">
+      {error}
+    </p>
+  ) : null;
+
+  if (appearance === "contact") {
+    return (
+      <div className={className}>
+        <label htmlFor={id} className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+          {Icon ? <Icon className="size-3.5 text-gold" strokeWidth={2} aria-hidden /> : null}
+          {label}
+          {required ? (
+            <span aria-hidden className="text-danger">
+              *
+            </span>
+          ) : null}
+          {optional ? <span className="font-normal text-stone">(Optional)</span> : null}
+        </label>
+        <div className="relative mt-2">
+          {Icon && !noInputIcon ? (
+            <Icon
+              className="pointer-events-none absolute top-1/2 left-4 z-10 size-4 -translate-y-1/2 text-stone"
+              strokeWidth={1.5}
+              aria-hidden
+            />
+          ) : null}
+          {children}
+        </div>
+        {errorText}
+      </div>
+    );
+  }
+
   return (
     <div className={className}>
       <label htmlFor={id} className="text-xs font-semibold tracking-[0.14em] text-ink uppercase">
@@ -269,11 +393,63 @@ function Field({ id, label, error, optional, className, children }: FieldProps) 
         {optional ? <span className="ml-2 font-normal tracking-normal text-stone normal-case">(optional)</span> : null}
       </label>
       {children}
+      {errorText}
+    </div>
+  );
+}
+
+/**
+ * Contact design: villa interest as large, tappable option cards (radio group).
+ * Same field name/value as the default <select>, so validation is unchanged.
+ */
+function VillaChoice({
+  options,
+  details,
+  defaultValue,
+  error,
+}: {
+  options: string[];
+  details: Record<string, string>;
+  defaultValue: string;
+  error?: string;
+}) {
+  const choices = [...options.map((name) => ({ value: name, label: name, hint: details[name] })), { value: "", label: "Not sure yet", hint: "Help me choose" }];
+  return (
+    <fieldset className="sm:col-span-2" aria-describedby={error ? "villa-error" : undefined}>
+      <legend className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+        <House className="size-3.5 text-gold" strokeWidth={2} aria-hidden />
+        Villa Interest
+        <span className="font-normal text-stone">(Optional)</span>
+      </legend>
+      <div className="mt-2 grid grid-cols-2 gap-3">
+        {choices.map((c) => (
+          <label
+            key={c.value || "none"}
+            className="group relative flex min-h-[4.25rem] cursor-pointer flex-col justify-center rounded-xl border border-field/80 bg-white px-4 py-3 transition-[border-color,background-color,box-shadow] duration-300 hover:border-stone has-[:checked]:border-gold has-[:checked]:bg-gold-light/10 has-[:checked]:shadow-[0_0_0_1px_var(--color-gold)] has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-gold-light/30"
+          >
+            <input
+              type="radio"
+              name="villa"
+              value={c.value}
+              defaultChecked={defaultValue === c.value}
+              className="peer sr-only"
+            />
+            <span className="pr-5 text-sm font-semibold text-ink">{c.label}</span>
+            {c.hint ? <span className="mt-0.5 text-xs text-stone">{c.hint}</span> : null}
+            <span
+              aria-hidden
+              className="absolute top-3 right-3 inline-flex size-4 items-center justify-center rounded-full border border-field bg-white peer-checked:border-gold peer-checked:bg-gold"
+            >
+              <span className="size-1.5 rounded-full bg-white" />
+            </span>
+          </label>
+        ))}
+      </div>
       {error ? (
-        <p id={`${id}-error`} className="mt-2 text-sm text-danger">
+        <p id="villa-error" className="mt-2 text-sm text-danger">
           {error}
         </p>
       ) : null}
-    </div>
+    </fieldset>
   );
 }

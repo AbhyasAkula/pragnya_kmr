@@ -139,5 +139,5 @@ export async function getAboutContent() {
 /* -------------------------------- Contact ------------------------------- */
 
 export async function getContactContent() {
-  return { ...pages.contactPage, villaOptions: villaContent.villas.map((v) => ({ slug: v.slug, name: v.name })) };
+  return { ...pages.contactPage, villaOptions: villaContent.villas.map((v) => ({ slug: v.slug, name: v.name, configuration: v.configuration })) };
 }

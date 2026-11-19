@@ -3,7 +3,6 @@ import Image from "next/image";
 import { MilestoneTimeline, ProgressBar } from "@/components/construction/progress";
 import { SiteShell } from "@/components/layout/site-shell";
 import { MediaGrid } from "@/components/media/media-grid";
-import { CtaBand } from "@/components/sections/shared/cta-band";
 import { PageHero } from "@/components/sections/shared/page-hero";
 import { ButtonLink } from "@/components/ui/button";
 import { MediaBadge } from "@/components/ui/media-badge";
@@ -43,7 +42,7 @@ function SampleTag({ update, onDark = false }: { update: ConstructionUpdate; onD
 }
 
 export default async function ConstructionProgressPage() {
-  const { hero, latest, milestones: milestoneCopy, history, cta, milestoneList, latestUpdate, earlierUpdates, notice } =
+  const { hero, latest, milestones: milestoneCopy, history, milestoneList, latestUpdate, earlierUpdates, notice } =
     await getConstructionContent();
   const [lead, ...moreMedia] = latestUpdate.media;
 
@@ -166,8 +165,6 @@ export default async function ConstructionProgressPage() {
           </div>
         </section>
       ) : null}
-
-      <CtaBand {...cta} secondary={{ label: "View master plan", href: "/master-plan" }} />
     </SiteShell>
   );
 }

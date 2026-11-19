@@ -26,6 +26,10 @@
   --color-umber: #7a5c48;
   --color-sage: #8fa37e;
   --color-sage-deep: #5f7350;
+  /* Contact page */
+  --color-pine: #1f2b22;         /* deep green for the booking button (14:1 with ivory text) */
+  --color-pine-soft: #2a3a2e;    /* hover */
+  --color-whatsapp: #25d366;     /* WhatsApp brand green — icon tile only */
   --color-field: #948b80;        /* form control borders (3.35:1 on white, WCAG 1.4.11) */
   --color-placeholder: #78716c;  /* input placeholder text (4.8:1 on white) */
 

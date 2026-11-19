@@ -4,7 +4,10 @@ import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { SiteVisitForm } from "@/components/sections/home/site-visit-form";
 
-type VillaOption = { slug: string; name: string };
+type VillaOption = { slug: string; name: string; configuration?: string };
+
+const detailsOf = (villas: VillaOption[]) =>
+  Object.fromEntries(villas.flatMap((v) => (v.configuration ? [[v.name, v.configuration]] : [])));
 
 /**
  * The contact page's Book a Site Visit form.
@@ -31,10 +34,10 @@ export function ContactVisitForm({ villas, anchorId, headingId }: { villas: Vill
     document.getElementById(headingId)?.focus({ preventScroll: true });
   }, [arrivingToBook, anchorId, headingId]);
 
-  return <SiteVisitForm key={villa ?? "none"} villaOptions={villas.map((v) => v.name)} defaultVilla={villa} />;
+  return <SiteVisitForm key={villa ?? "none"} appearance="contact" villaOptions={villas.map((v) => v.name)} villaDetails={detailsOf(villas)} defaultVilla={villa} />;
 }
 
 /** Server-rendered stand-in: identical form, so there is no layout shift. */
 export function ContactVisitFormFallback({ villas }: { villas: VillaOption[] }) {
-  return <SiteVisitForm villaOptions={villas.map((v) => v.name)} />;
+  return <SiteVisitForm appearance="contact" villaOptions={villas.map((v) => v.name)} villaDetails={detailsOf(villas)} />;
 }

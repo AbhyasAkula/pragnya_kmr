@@ -36,9 +36,6 @@ export default async function AmenitiesPage() {
           <ButtonLink href="#all-amenities" size="lg">
             Browse all amenities
           </ButtonLink>
-          <ButtonLink href="/master-plan" variant="outline-light" size="lg">
-            See them on the plan
-          </ButtonLink>
         </div>
       </PageHero>
 

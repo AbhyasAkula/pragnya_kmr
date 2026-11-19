@@ -1,7 +1,6 @@
 import { Camera, Info, PenTool } from "lucide-react";
 import { SiteShell } from "@/components/layout/site-shell";
 import { GalleryBrowser } from "@/components/media/gallery-browser";
-import { CtaBand } from "@/components/sections/shared/cta-band";
 import { PageHero } from "@/components/sections/shared/page-hero";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -19,7 +18,7 @@ export async function generateMetadata() {
 }
 
 export default async function GalleryPage() {
-  const { hero, browse, cta, categories, items, notice } = await getGalleryPageContent();
+  const { hero, browse, categories, items, notice } = await getGalleryPageContent();
 
   return (
     <SiteShell jsonLd={[breadcrumbJsonLd(crumbs)]}>
@@ -62,8 +61,6 @@ export default async function GalleryPage() {
           </div>
         </div>
       </section>
-
-      <CtaBand {...cta} secondary={{ label: "Explore villas", href: "/villas" }} />
     </SiteShell>
   );
 }

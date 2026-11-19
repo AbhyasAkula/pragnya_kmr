@@ -5,7 +5,6 @@ import { SiteShell } from "@/components/layout/site-shell";
 import { PlanDiagram, zoneSwatch } from "@/components/master-plan/plan-diagram";
 import { PlanLegend } from "@/components/master-plan/plan-legend";
 import { PlanViewer } from "@/components/master-plan/plan-viewer";
-import { CtaBand } from "@/components/sections/shared/cta-band";
 import { PageHero } from "@/components/sections/shared/page-hero";
 import { ButtonLink } from "@/components/ui/button";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/reveal";
@@ -27,7 +26,7 @@ export async function generateMetadata() {
 
 export default async function MasterPlanPage() {
   const [content, facts, villas] = await Promise.all([getMasterPlanContent(), getProjectFacts(), getVillaModels()]);
-  const { hero, plan, highlights, points, models, cta } = content;
+  const { hero, plan, highlights, points, models } = content;
 
   const stats = [
     { value: facts.landAcres, label: "Acres" },
@@ -40,9 +39,6 @@ export default async function MasterPlanPage() {
     <SiteShell jsonLd={[breadcrumbJsonLd(crumbs)]}>
       <PageHero {...hero} breadcrumbs={crumbs}>
         <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:gap-4">
-          <ButtonLink href="#plan" size="lg">
-            Explore the plan
-          </ButtonLink>
           <ButtonLink href="/villas" variant="outline-light" size="lg">
             View villas
           </ButtonLink>
@@ -173,8 +169,6 @@ export default async function MasterPlanPage() {
           </RevealGroup>
         </div>
       </section>
-
-      <CtaBand {...cta} secondary={{ label: "Explore amenities", href: "/amenities" }} />
     </SiteShell>
   );
 }

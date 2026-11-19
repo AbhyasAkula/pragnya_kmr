@@ -1,118 +1,142 @@
-import { ArrowUpRight, Clock, Mail, MapPin, Phone } from "lucide-react";
+import { ArrowUpRight, ChevronRight, Clock, MapPin, Phone } from "lucide-react";
+import Image from "next/image";
+import type { ReactNode } from "react";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { siteConfig } from "@/config/site";
-import { emailHref, phoneHref, whatsappHref } from "@/lib/contact";
+import { phoneHref, whatsappHref } from "@/lib/contact";
 import { cn } from "@/lib/utils";
+import type { ImageAsset } from "@/types/content";
+
+/** Shared card surface for the contact page: white on ivory, hairline border, soft layered shadow. */
+export const contactCard =
+  "rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(28,25,23,0.04),0_16px_36px_-24px_rgba(28,25,23,0.35)]";
+
+/** Bronze tile used for the phone and location icons. */
+const bronzeTile = "bg-gradient-to-br from-[#c4924f] to-[#94590a] text-white";
+
+type ActionProps = {
+  href: string;
+  external?: boolean;
+  tile: ReactNode;
+  tileClassName: string;
+  title: string;
+  description: string;
+  detail?: string;
+};
+
+function ActionCard({ href, external, tile, tileClassName, title, description, detail }: ActionProps) {
+  return (
+    <a
+      href={href}
+      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      className={cn(
+        contactCard,
+        "group flex items-center gap-4 p-5 transition-[border-color,box-shadow] duration-300 ease-calm hover:border-gold/45 hover:shadow-[0_1px_2px_rgba(28,25,23,0.05),0_22px_44px_-26px_rgba(28,25,23,0.45)] sm:gap-5 sm:p-6",
+      )}
+    >
+      <span className={cn("inline-flex size-14 shrink-0 items-center justify-center rounded-xl", tileClassName)}>
+        {tile}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-display text-[1.4rem] leading-tight text-ink sm:text-[1.6rem]">{title}</span>
+        <span className="mt-1 block text-sm text-stone">{description}</span>
+        {detail ? <span className="mt-1 block text-sm font-semibold text-ink tabular-nums">{detail}</span> : null}
+      </span>
+      <span
+        aria-hidden
+        className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-gold/35 text-gold transition-colors duration-300 group-hover:border-gold group-hover:bg-gold group-hover:text-white"
+      >
+        <ChevronRight className="size-4" />
+      </span>
+      {external ? <span className="sr-only">(opens in a new tab)</span> : null}
+    </a>
+  );
+}
 
 /**
- * The two primary sales actions — WhatsApp chat and a phone call — built
- * only from the configured contact numbers (src/config/site.ts / env).
+ * WhatsApp chat + phone call. Both use only the configured contact details
+ * (src/config/site.ts / NEXT_PUBLIC_CONTACT_* env vars).
  */
 export function ContactActions({ className }: { className?: string }) {
-  const { contact } = siteConfig;
-  const actions = [
-    {
-      id: "whatsapp",
-      title: "WhatsApp Chat",
-      detail: "Brochures, prices and directions — answered quickly.",
-      cta: "Start a chat",
-      href: whatsappHref(),
-      external: true,
-      icon: <WhatsAppIcon className="size-6" />,
-      dark: true,
-    },
-    {
-      id: "call",
-      title: "Call Now",
-      detail: contact.phone,
-      cta: "Call our sales team",
-      href: phoneHref,
-      external: false,
-      icon: <Phone className="size-6" strokeWidth={1.5} aria-hidden />,
-      dark: false,
-    },
-  ];
-
   return (
-    <ul className={cn("grid gap-4 sm:grid-cols-2 sm:gap-6", className)}>
-      {actions.map((a) => (
-        <li key={a.id}>
-          <a
-            href={a.href}
-            {...(a.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-            className={cn(
-              "group flex h-full items-center gap-5 rounded-[1.5rem] p-6 shadow-[0_30px_60px_-40px_rgba(28,25,23,0.55)] transition-[background-color,box-shadow,transform] duration-300 ease-calm hover:-translate-y-0.5 sm:p-8",
-              a.dark ? "bg-ink text-ivory hover:bg-ink-soft" : "border border-line bg-white text-ink",
-            )}
-          >
-            <span
-              className={cn(
-                "inline-flex size-14 shrink-0 items-center justify-center rounded-full",
-                a.dark ? "bg-gold-light text-ink" : "bg-ink text-gold-light",
-              )}
-            >
-              {a.icon}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block font-display text-[1.75rem] leading-tight sm:text-3xl">{a.title}</span>
-              <span className={cn("mt-1 block text-sm break-words tabular-nums", a.dark ? "text-mist" : "text-stone")}>
-                {a.detail}
-              </span>
-              <span
-                className={cn(
-                  "mt-3 inline-flex items-center gap-1.5 text-sm font-semibold",
-                  a.dark ? "text-gold-light" : "text-gold",
-                )}
-              >
-                {a.cta}
-                <ArrowUpRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5" aria-hidden />
-                {a.external ? <span className="sr-only">(opens in a new tab)</span> : null}
-              </span>
-            </span>
-          </a>
-        </li>
-      ))}
+    <ul className={cn("grid gap-4", className)}>
+      <li>
+        <ActionCard
+          href={whatsappHref()}
+          external
+          tile={<WhatsAppIcon className="size-8" />}
+          tileClassName="bg-whatsapp text-white"
+          title="Chat on WhatsApp"
+          description="Get instant assistance from our team"
+        />
+      </li>
+      <li>
+        <ActionCard
+          href={phoneHref}
+          tile={<Phone className="size-6" fill="currentColor" strokeWidth={0} aria-hidden />}
+          tileClassName={bronzeTile}
+          title="Call Us"
+          description="Speak directly with a sales consultant"
+          detail={siteConfig.contact.phone}
+        />
+      </li>
     </ul>
   );
 }
 
-/** Slim row of supporting details: site office, hours and email. */
-export function OfficeDetails({ className }: { className?: string }) {
-  const { contact, location } = siteConfig;
-  const items = [
-    {
-      icon: MapPin,
-      label: "Site office",
-      text: `${location.street}, ${location.city}`,
-      href: location.mapUrl,
-      action: "Directions",
-      external: true,
-    },
-    { icon: Clock, label: "Visiting hours", text: contact.hours },
-    { icon: Mail, label: "Email", text: contact.email, href: emailHref, action: "Write to us", external: false },
-  ];
+/**
+ * Project location: name, city (placeholder until confirmed), visiting hours,
+ * a working map link and a compact representative image.
+ */
+export function ProjectLocationCard({ image, className }: { image: ImageAsset; className?: string }) {
+  const { location, contact, name } = siteConfig;
   return (
-    <ul className={cn("grid gap-6 md:grid-cols-3 md:gap-8", className)}>
-      {items.map(({ icon: Icon, label, text, href, action, external }) => (
-        <li key={label} className="flex gap-4">
-          <Icon className="mt-0.5 size-5 shrink-0 text-gold" strokeWidth={1.5} aria-hidden />
-          <div className="min-w-0">
-            <p className="text-xs font-semibold tracking-[0.14em] text-ink uppercase">{label}</p>
-            <p className="mt-1 text-sm break-words text-stone">{text}</p>
-            {href ? (
-              <a
-                href={href}
-                {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                className="mt-1 inline-flex min-h-8 items-center gap-1 text-sm font-semibold text-gold hover:underline"
-              >
-                {action}
-                <ArrowUpRight className="size-3.5" aria-hidden />
-                {external ? <span className="sr-only">(opens in a new tab)</span> : null}
-              </a>
-            ) : null}
-          </div>
-        </li>
-      ))}
-    </ul>
+    <section aria-labelledby="project-location-title" className={cn(contactCard, "p-5 sm:p-6", className)}>
+      <div className="flex items-start gap-4 sm:gap-5">
+        <span className={cn("inline-flex size-14 shrink-0 items-center justify-center rounded-xl", bronzeTile)}>
+          <MapPin className="size-6" aria-hidden />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 id="project-location-title" className="font-display text-[1.4rem] leading-tight text-ink sm:text-[1.6rem]">
+            Project Location
+          </h2>
+          <address className="mt-1 text-sm leading-relaxed text-stone not-italic">
+            <span className="block font-semibold text-ink">{name}</span>
+            {location.street}, {location.city}, {location.region}
+          </address>
+        </div>
+      </div>
+
+      <div className="mt-5 flex flex-col items-start gap-3 border-t border-line pt-5">
+        <p className="flex items-center gap-2 text-sm text-stone">
+          <Clock className="size-4 shrink-0 text-gold" strokeWidth={1.75} aria-hidden />
+          {contact.hours}
+        </p>
+        <a
+          href={location.mapUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-lg border border-gold/60 px-4 text-sm font-semibold text-ink transition-colors duration-300 hover:border-gold hover:bg-gold hover:text-white sm:w-auto"
+        >
+          <MapPin className="size-4" aria-hidden />
+          View on Map
+          <ArrowUpRight className="size-4" aria-hidden />
+          <span className="sr-only">(opens Google Maps in a new tab)</span>
+        </a>
+      </div>
+
+      <div className="relative mt-5 aspect-[16/9] overflow-hidden rounded-xl">
+        <Image
+          src={image.src}
+          alt={image.alt}
+          fill
+          sizes="(min-width: 1280px) 460px, (min-width: 1024px) 38vw, 100vw"
+          className="object-cover"
+        />
+        <span className="absolute bottom-2 left-2 rounded-full bg-ink/70 px-2.5 py-1 text-xs font-medium text-ivory backdrop-blur">
+          Representative image
+        </span>
+      </div>
+    </section>
   );
 }

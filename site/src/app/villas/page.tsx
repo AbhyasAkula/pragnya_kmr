@@ -1,5 +1,4 @@
 import { SiteShell } from "@/components/layout/site-shell";
-import { CtaBand } from "@/components/sections/shared/cta-band";
 import { PageHero } from "@/components/sections/shared/page-hero";
 import { ButtonLink } from "@/components/ui/button";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/reveal";
@@ -26,7 +25,7 @@ export async function generateMetadata() {
 }
 
 export default async function VillasPage() {
-  const [{ hero, listing, comparison, cta }, villas, { priceNote }] = await Promise.all([
+  const [{ hero, listing, comparison }, villas, { priceNote }] = await Promise.all([
     getVillasPageContent(),
     getVillaModels(),
     getVillaSection(),
@@ -72,8 +71,6 @@ export default async function VillasPage() {
           <p className="mt-6 text-xs text-stone">{priceNote}</p>
         </div>
       </section>
-
-      <CtaBand {...cta} secondary={{ label: "View master plan", href: "/master-plan" }} />
     </SiteShell>
   );
 }

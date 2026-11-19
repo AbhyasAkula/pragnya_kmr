@@ -1,7 +1,6 @@
 import { Eye, Hammer, Leaf, MessagesSquare, Target, Users, type LucideIcon } from "lucide-react";
 import Image from "next/image";
 import { SiteShell } from "@/components/layout/site-shell";
-import { CtaBand } from "@/components/sections/shared/cta-band";
 import { PageHero } from "@/components/sections/shared/page-hero";
 import { ButtonLink } from "@/components/ui/button";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/reveal";
@@ -35,7 +34,7 @@ export async function generateMetadata() {
 }
 
 export default async function AboutPage() {
-  const [{ hero, storyImage, values, project, cta, company, facts }, villas] = await Promise.all([
+  const [{ hero, storyImage, values, project, company, facts }, villas] = await Promise.all([
     getAboutContent(),
     getVillaModels(),
   ]);
@@ -167,8 +166,6 @@ export default async function AboutPage() {
           </div>
         </div>
       </section>
-
-      <CtaBand {...cta} secondary={{ label: "Contact us", href: "/contact" }} />
     </SiteShell>
   );
 }
