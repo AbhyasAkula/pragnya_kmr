@@ -5,7 +5,6 @@
  * diagram below is then hidden automatically.
  */
 import type { ImageAsset, MasterPlanZone } from "@/types/content";
-import { projectFacts as facts } from "./project";
 
 export const masterPlan: {
   /** Approved master plan image. Absent = placeholder diagram is rendered. */
@@ -55,7 +54,7 @@ export const masterPlan: {
       id: "z-clubhouse",
       marker: 5,
       label: "Clubhouse & pools",
-      description: `${facts.clubhouseSqFt.toLocaleString("en-IN")} sq ft clubhouse with the pool deck.`,
+      description: "{clubhouseSqFt} sq ft clubhouse with the pool deck.",
       tone: "ink",
       shape: { x: 500, y: 330, width: 200, height: 130, radius: 20 },
     },

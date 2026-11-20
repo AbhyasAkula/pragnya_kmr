@@ -1,17 +1,14 @@
 /** PLACEHOLDER COPY for the interior pages (hero + section intros). */
 import { siteConfig } from "@/config/site";
-import { formatNumber } from "@/lib/utils";
 import type { PageIntro, SectionCopy } from "@/types/content";
 import { images } from "./images";
-import { projectFacts as facts } from "./project";
-import { villas } from "./villas";
 
 export const villasPage = {
   hero: {
     eyebrow: "The villa collection",
-    title: `${villas.length} residences,`,
+    title: "{villaModelCount} residences,",
     accent: "one standard of living",
-    description: `${facts.villaCount} independent villas across ${villas.length} models, each on its own plot with a private garden and room to grow.`,
+    description: "{villaCount} independent villas across {villaModelCount} models, each on its own plot with a private garden and room to grow.",
     image: { src: images.exteriorWhitePool, alt: "White contemporary villa with a pool and sun loungers" },
   } satisfies PageIntro,
   listing: {
@@ -38,9 +35,9 @@ export const villaDetailCopy = {
 export const masterPlanPage = {
   hero: {
     eyebrow: "Master plan",
-    title: `${facts.landAcres} acres,`,
+    title: "{landAcres} acres,",
     accent: "thoughtfully composed",
-    description: `How ${facts.villaCount} villas, a central park and the clubhouse come together within a single gated community.`,
+    description: "How {villaCount} villas, a central park and the clubhouse come together within a single gated community.",
     image: { src: images.exteriorTimberFacade, alt: "Contemporary villa with timber screens behind a gated driveway" },
   } satisfies PageIntro,
   plan: {
@@ -73,7 +70,7 @@ export const amenitiesPage = {
     eyebrow: "Amenities",
     title: "Resort living,",
     accent: "every single day",
-    description: `A ${formatNumber(facts.clubhouseSqFt)} sq ft clubhouse and over ${facts.amenityCount} curated amenities, all within a short stroll of home at ${siteConfig.name}.`,
+    description: "A {clubhouseSqFt} sq ft clubhouse and over {amenityCount} curated amenities, all within a short stroll of home at {projectName}.",
     image: { src: images.amenityResortDeck, alt: "Resort-style pool deck with loungers beneath a timber pavilion" },
   } satisfies PageIntro,
   categories: {

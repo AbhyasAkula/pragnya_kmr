@@ -27,7 +27,15 @@ import { contactHref } from "@/lib/contact";
 import { breadcrumbJsonLd, pageMetadata, villaJsonLd, type Crumb } from "@/lib/seo";
 import { cn, formatPriceINR } from "@/lib/utils";
 
-/** Every villa is prerendered at build time; unknown slugs 404 via notFound(). */
+/**
+ * Published villas are prerendered at build time. Villas published later
+ * from the admin dashboard render on their first visit and are then cached;
+ * unknown slugs 404 via notFound(). `instant = false` lets those on-demand
+ * renders (and regeneration after an admin change) block on the data
+ * instead of requiring a param-less static shell.
+ */
+export const instant = false;
+
 export async function generateStaticParams() {
   return (await getVillaSlugs()).map((slug) => ({ slug }));
 }

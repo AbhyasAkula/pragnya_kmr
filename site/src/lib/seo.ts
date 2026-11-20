@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { siteConfig, siteUrl } from "@/config/site";
-import type { ImageAsset, VillaModel } from "@/types/content";
+import type { ImageAsset, SiteContact, VillaModel } from "@/types/content";
 
 if (!siteUrl && process.env.NODE_ENV === "production") {
   console.warn(
@@ -124,8 +124,8 @@ export function absoluteUrl(path: `/${string}`): string | null {
 }
 
 /** schema.org structured data for the homepage. */
-export function homeJsonLd(villas: VillaModel[], heroImage: string, description: string) {
-  const { location, contact } = siteConfig;
+export function homeJsonLd(villas: VillaModel[], heroImage: string, description: string, contact: SiteContact) {
+  const location = { street: contact.street, city: contact.city, region: contact.region, postalCode: contact.postalCode, country: siteConfig.location.country };
   const home = absoluteUrl("/");
   const address = {
     "@type": "PostalAddress",

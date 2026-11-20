@@ -44,7 +44,7 @@ function SampleTag({ update, onDark = false }: { update: ConstructionUpdate; onD
 export default async function ConstructionProgressPage() {
   const { hero, latest, milestones: milestoneCopy, history, milestoneList, latestUpdate, earlierUpdates, notice } =
     await getConstructionContent();
-  const [lead, ...moreMedia] = latestUpdate.media;
+  const [lead, ...moreMedia] = latestUpdate?.media ?? [];
 
   return (
     <SiteShell jsonLd={[breadcrumbJsonLd(crumbs)]}>
@@ -62,21 +62,26 @@ export default async function ConstructionProgressPage() {
       {/* Latest update — featured */}
       <section id="latest-update" aria-labelledby="latest-title" className="section-y">
         <div className="container-site">
-          <p className="mb-10 flex gap-3 rounded-xl border border-gold/30 bg-gold-light/15 px-4 py-3 text-sm text-ink">
-            <Info className="mt-0.5 size-4 shrink-0 text-gold" aria-hidden />
-            {notice}
-          </p>
+          {notice ? (
+            <p className="mb-10 flex gap-3 rounded-xl border border-gold/30 bg-gold-light/15 px-4 py-3 text-sm text-ink">
+              <Info className="mt-0.5 size-4 shrink-0 text-gold" aria-hidden />
+              {notice}
+            </p>
+          ) : null}
           <Reveal>
             <SectionHeading id="latest-title" {...latest} />
           </Reveal>
 
+          {latestUpdate ? (
           <Reveal className="mt-12 overflow-hidden rounded-[2rem] bg-ink text-ivory lg:mt-16">
             <article aria-labelledby="latest-update-title" className="grid lg:grid-cols-12">
-              <div className="relative aspect-[4/3] lg:col-span-7 lg:aspect-auto lg:min-h-[30rem]">
-                <Image src={lead.src} alt={lead.alt} fill priority sizes="(min-width: 1024px) 58vw, 100vw" className="object-cover" />
-                <MediaBadge source={lead.source} className="absolute top-4 left-4" long />
-              </div>
-              <div className="flex flex-col p-7 sm:p-10 lg:col-span-5">
+              {lead ? (
+                <div className="relative aspect-[4/3] lg:col-span-7 lg:aspect-auto lg:min-h-[30rem]">
+                  <Image src={lead.src} alt={lead.alt} fill priority sizes="(min-width: 1024px) 58vw, 100vw" className="object-cover" />
+                  <MediaBadge source={lead.source} className="absolute top-4 left-4" long />
+                </div>
+              ) : null}
+              <div className={cn("flex flex-col p-7 sm:p-10", lead ? "lg:col-span-5" : "lg:col-span-12")}>
                 <div className="flex flex-wrap items-center gap-3">
                   <time dateTime={latestUpdate.date} className="text-sm font-semibold tracking-[0.14em] text-gold-light uppercase">
                     {formatDate(latestUpdate.date)}
@@ -99,6 +104,11 @@ export default async function ConstructionProgressPage() {
               </div>
             </article>
           </Reveal>
+          ) : (
+            <p className="mt-12 rounded-2xl border border-line bg-white px-6 py-10 text-center text-stone">
+              Construction updates will be published here as work progresses.
+            </p>
+          )}
 
           {moreMedia.length > 0 ? (
             <div className="mt-8">

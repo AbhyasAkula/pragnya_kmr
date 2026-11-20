@@ -32,6 +32,15 @@
   --color-whatsapp: #25d366;     /* WhatsApp brand green — icon tile only */
   --color-field: #948b80;        /* form control borders (3.35:1 on white, WCAG 1.4.11) */
   --color-placeholder: #78716c;  /* input placeholder text (4.8:1 on white) */
+  /* Admin dashboard status tones (text on their tinted backgrounds ≥ 4.5:1) */
+  --color-info: #1d4e75;
+  --color-info-bg: #e6eef5;
+  --color-warning: #8a5300;
+  --color-warning-bg: #fbf1dc;
+  --color-success-bg: #e5f0e6;
+  --color-danger-bg: #fbe9e7;
+  --color-panel: #ffffff;
+  --color-canvas: #f6f3ee;       /* admin page background */
 
   /* Typography (variables are injected by next/font in src/config/fonts.ts) */
   --font-display: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;

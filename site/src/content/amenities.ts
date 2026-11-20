@@ -3,10 +3,8 @@
  * `featured` items (in this order) power the homepage preview; the full,
  * categorised list powers /amenities.
  */
-import { formatNumber } from "@/lib/utils";
 import type { Amenity, AmenityCategory, AmenityFeature } from "@/types/content";
 import { images } from "./images";
-import { projectFacts as facts } from "./project";
 
 export const amenityCategories: AmenityCategory[] = [
   { id: "clubhouse", title: "Clubhouse & social", description: "Spaces to gather, celebrate and work, steps from home." },
@@ -23,7 +21,7 @@ export const amenities: Amenity[] = [
   {
     id: "a-clubhouse",
     title: "Grand Clubhouse",
-    description: `${formatNumber(facts.clubhouseSqFt)} sq ft with lounges, banquet hall and co-working suites.`,
+    description: "{clubhouseSqFt} sq ft with lounges, banquet hall and co-working suites.",
     icon: "clubhouse",
     category: "clubhouse",
     featured: true,
@@ -117,7 +115,7 @@ export const amenityFeatures: AmenityFeature[] = [
     id: "f-clubhouse",
     eyebrow: "The clubhouse",
     title: "A social heart for the whole community",
-    description: `At ${formatNumber(facts.clubhouseSqFt)} sq ft, the clubhouse gathers lounges, a banquet hall, co-working suites and a café under one roof.`,
+    description: "At {clubhouseSqFt} sq ft, the clubhouse gathers lounges, a banquet hall, co-working suites and a café under one roof.",
     points: ["Banquet hall with catering kitchen", "Co-working suites and meeting rooms", "Preview theatre and café terrace"],
     image: { src: images.amenityBanquet, alt: "Banquet hall laid with round tables beneath chandeliers" },
   },
@@ -141,7 +139,7 @@ export const amenityFeatures: AmenityFeature[] = [
     id: "f-outdoors",
     eyebrow: "Landscape",
     title: "Green rooms between the homes",
-    description: `With ${facts.openSpacePercent}% of the land kept open, gardens, lawns and shaded trails are never more than a short walk away.`,
+    description: "With {openSpacePercent}% of the land kept open, gardens, lawns and shaded trails are never more than a short walk away.",
     points: ["2.4 km tree-lined jogging trail", "Butterfly garden and reflexology path", "Central park and barbecue lawn"],
     image: { src: images.amenityGardenPath, alt: "Garden path lined with flowering hedges" },
   },

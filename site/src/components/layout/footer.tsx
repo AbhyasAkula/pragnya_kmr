@@ -6,20 +6,21 @@ import { SocialIcon } from "@/components/ui/social-icons";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { footerNav } from "@/config/navigation";
 import { siteConfig } from "@/config/site";
-import { whatsappHref } from "@/lib/contact";
+import { getContactDetails, getSiteSettings } from "@/lib/data";
+import { emailHref, phoneHref, whatsappHref } from "@/lib/contact";
 
 /**
  * Compact footer: brand + essential contact details on one row, then a thin
  * bar with minimal navigation, copyright and legal information.
  */
-export function Footer() {
-  const { contact, location } = siteConfig;
+export async function Footer() {
+  const [contact, settings] = await Promise.all([getContactDetails(), getSiteSettings()]);
 
   const contactItems: { icon: ReactNode; label: string; href: string; external?: boolean }[] = [
-    { icon: <Phone className="size-4" aria-hidden />, label: contact.phone, href: contact.phoneHref },
-    { icon: <WhatsAppIcon className="size-4" />, label: "WhatsApp chat", href: whatsappHref(), external: true },
-    { icon: <Mail className="size-4" aria-hidden />, label: contact.email, href: `mailto:${contact.email}` },
-    { icon: <MapPin className="size-4" aria-hidden />, label: `${location.city}, ${location.region}`, href: location.mapUrl, external: true },
+    { icon: <Phone className="size-4" aria-hidden />, label: contact.phone, href: phoneHref(contact) },
+    { icon: <WhatsAppIcon className="size-4" />, label: "WhatsApp chat", href: whatsappHref(contact), external: true },
+    { icon: <Mail className="size-4" aria-hidden />, label: contact.email, href: emailHref(contact) },
+    { icon: <MapPin className="size-4" aria-hidden />, label: `${contact.city}, ${contact.region}`, href: contact.mapUrl, external: true },
   ];
 
   return (
@@ -85,7 +86,7 @@ export function Footer() {
             <span>
               © {siteConfig.copyrightYear} {siteConfig.developer}
             </span>
-            <span>RERA Reg. No. {siteConfig.rera}</span>
+            <span>RERA Reg. No. {settings.reraNumber}</span>
           </div>
         </div>
 

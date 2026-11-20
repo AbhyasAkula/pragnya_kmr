@@ -3,8 +3,11 @@
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { SiteVisitForm } from "@/components/sections/home/site-visit-form";
+import type { SiteContact } from "@/types/content";
 
 type VillaOption = { slug: string; name: string; configuration?: string };
+/** Contact details and booking settings forwarded to the form. */
+export type FormContext = { contactInfo: SiteContact; bookingsOpen: boolean; privacyPolicyUrl: string | null };
 
 const detailsOf = (villas: VillaOption[]) =>
   Object.fromEntries(villas.flatMap((v) => (v.configuration ? [[v.name, v.configuration]] : [])));
@@ -17,7 +20,17 @@ const detailsOf = (villas: VillaOption[]) =>
  * Reads search params, so render it inside <Suspense> with
  * <ContactVisitFormFallback> (the same form, without the pre-selection).
  */
-export function ContactVisitForm({ villas, anchorId, headingId }: { villas: VillaOption[]; anchorId: string; headingId: string }) {
+export function ContactVisitForm({
+  villas,
+  anchorId,
+  headingId,
+  context,
+}: {
+  villas: VillaOption[];
+  anchorId: string;
+  headingId: string;
+  context: FormContext;
+}) {
   const params = useSearchParams();
   const villa = villas.find((v) => v.slug === params.get("villa"))?.name;
   const arrivingToBook = params.get("type") === "visit";
@@ -34,10 +47,10 @@ export function ContactVisitForm({ villas, anchorId, headingId }: { villas: Vill
     document.getElementById(headingId)?.focus({ preventScroll: true });
   }, [arrivingToBook, anchorId, headingId]);
 
-  return <SiteVisitForm key={villa ?? "none"} appearance="contact" villaOptions={villas.map((v) => v.name)} villaDetails={detailsOf(villas)} defaultVilla={villa} />;
+  return <SiteVisitForm key={villa ?? "none"} appearance="contact" villaOptions={villas.map((v) => v.name)} villaDetails={detailsOf(villas)} defaultVilla={villa} {...context} />;
 }
 
 /** Server-rendered stand-in: identical form, so there is no layout shift. */
-export function ContactVisitFormFallback({ villas }: { villas: VillaOption[] }) {
-  return <SiteVisitForm appearance="contact" villaOptions={villas.map((v) => v.name)} villaDetails={detailsOf(villas)} />;
+export function ContactVisitFormFallback({ villas, context }: { villas: VillaOption[]; context: FormContext }) {
+  return <SiteVisitForm appearance="contact" villaOptions={villas.map((v) => v.name)} villaDetails={detailsOf(villas)} {...context} />;
 }

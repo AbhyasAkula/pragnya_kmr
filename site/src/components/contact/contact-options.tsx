@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { siteConfig } from "@/config/site";
 import { phoneHref, whatsappHref } from "@/lib/contact";
+import { getContactDetails } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import type { ImageAsset } from "@/types/content";
 
@@ -57,12 +58,13 @@ function ActionCard({ href, external, tile, tileClassName, title, description, d
  * WhatsApp chat + phone call. Both use only the configured contact details
  * (src/config/site.ts / NEXT_PUBLIC_CONTACT_* env vars).
  */
-export function ContactActions({ className }: { className?: string }) {
+export async function ContactActions({ className }: { className?: string }) {
+  const contact = await getContactDetails();
   return (
     <ul className={cn("grid gap-4", className)}>
       <li>
         <ActionCard
-          href={whatsappHref()}
+          href={whatsappHref(contact)}
           external
           tile={<WhatsAppIcon className="size-8" />}
           tileClassName="bg-whatsapp text-white"
@@ -72,12 +74,12 @@ export function ContactActions({ className }: { className?: string }) {
       </li>
       <li>
         <ActionCard
-          href={phoneHref}
+          href={phoneHref(contact)}
           tile={<Phone className="size-6" fill="currentColor" strokeWidth={0} aria-hidden />}
           tileClassName={bronzeTile}
           title="Call Us"
           description="Speak directly with a sales consultant"
-          detail={siteConfig.contact.phone}
+          detail={contact.phone}
         />
       </li>
     </ul>
@@ -88,8 +90,10 @@ export function ContactActions({ className }: { className?: string }) {
  * Project location: name, city (placeholder until confirmed), visiting hours,
  * a working map link and a compact representative image.
  */
-export function ProjectLocationCard({ image, className }: { image: ImageAsset; className?: string }) {
-  const { location, contact, name } = siteConfig;
+export async function ProjectLocationCard({ image, className }: { image: ImageAsset; className?: string }) {
+  const contact = await getContactDetails();
+  const location = { street: contact.street, city: contact.city, region: contact.region, mapUrl: contact.mapUrl };
+  const { name } = siteConfig;
   return (
     <section aria-labelledby="project-location-title" className={cn(contactCard, "p-5 sm:p-6", className)}>
       <div className="flex items-start gap-4 sm:gap-5">

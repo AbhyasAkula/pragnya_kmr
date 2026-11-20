@@ -7,7 +7,7 @@ import { company } from "@/content/company";
  * replaced with the client's verified details before launch. Run
  * `npm run check:placeholders` to list what is still outstanding.
  */
-const CONTACT_PHONE = process.env.NEXT_PUBLIC_CONTACT_PHONE ?? "+91 90000 00000"; // PLACEHOLDER
+const CONTACT_PHONE = process.env.NEXT_PUBLIC_CONTACT_PHONE ?? "+91 90000 00000"; // seed default
 
 /** Strips formatting; keeps a leading "+" when `keepPlus` is set. */
 function digitsOnly(value: string, keepPlus: boolean) {
@@ -39,17 +39,18 @@ export const siteConfig = {
   /** IANA zone used for business-day logic such as "earliest visit date". */
   timeZone: "Asia/Kolkata",
   location: {
-    street: "Survey No. 000, Serene Hills Road", // PLACEHOLDER
+    street: "Survey No. 000, Serene Hills Road", // seed default
     city: "Hyderabad",
     region: "Telangana",
-    postalCode: "500000", // PLACEHOLDER
+    postalCode: "500000", // seed default
     country: "IN",
-    mapUrl: "https://maps.google.com/?q=Hyderabad", // PLACEHOLDER
+    mapUrl: "https://maps.google.com/?q=Hyderabad", // seed default
   },
   /**
-   * PLACEHOLDER contact details — fictional. Override per deployment with the
-   * NEXT_PUBLIC_CONTACT_* env vars (see .env.example) or edit the fallbacks.
-   * `phoneHref` and the WhatsApp link are derived, never typed separately.
+   * SEED DEFAULTS ONLY (fictional). Location, contact details and the RERA
+   * number are managed in the admin dashboard (Content → Contact details,
+   * Settings) and read from the database; these values only seed a new
+   * database. `npm run check:placeholders` checks the live values.
    */
   contact: {
     phone: CONTACT_PHONE,
@@ -57,10 +58,10 @@ export const siteConfig = {
     /** International number for wa.me, digits only (country code first, no "+"). */
     whatsapp: digitsOnly(process.env.NEXT_PUBLIC_CONTACT_WHATSAPP ?? CONTACT_PHONE, false),
     whatsappMessage: "Hello, I'm interested in Aurelia Enclave villas. Please share more details.",
-    email: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "sales@example.com", // PLACEHOLDER
-    hours: "Site office open daily, 10 AM – 6 PM", // PLACEHOLDER
+    email: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "sales@example.com", // seed default
+    hours: "Site office open daily, 10 AM – 6 PM", // seed default
   },
-  rera: "P02400000000", // PLACEHOLDER — must be the real registration number
+  rera: "P02400000000", // seed default — live value: admin Settings
   /** PLACEHOLDER profile URLs. Not emitted in structured data until real. */
   social: [
     { label: "Instagram", href: "https://instagram.com/", icon: "instagram" },

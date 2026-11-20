@@ -8,6 +8,7 @@ import { SiteVisitCta } from "@/components/sections/home/site-visit-cta";
 import { VillaShowcase } from "@/components/sections/home/villa-showcase";
 import {
   getAmenities,
+  getContactDetails,
   getGalleryPreview,
   getHeroContent,
   getProjectOverview,
@@ -22,7 +23,7 @@ export async function generateMetadata() {
 }
 
 export default async function HomePage() {
-  const [hero, overview, villaSection, amenities, gallery, siteVisit, description] =
+  const [hero, overview, villaSection, amenities, gallery, siteVisit, description, contact] =
     await Promise.all([
       getHeroContent(),
       getProjectOverview(),
@@ -31,9 +32,10 @@ export default async function HomePage() {
       getGalleryPreview(),
       getSiteVisitContent(),
       getSeoDescription(),
+      getContactDetails(),
     ]);
 
-  const jsonLd = homeJsonLd(villaSection.villas, hero.image.src, description);
+  const jsonLd = homeJsonLd(villaSection.villas, hero.image.src, description, contact);
 
   return (
     <>
@@ -41,7 +43,7 @@ export default async function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
-      <Navbar />
+      <Navbar contact={contact} />
       <main id="main">
         <Hero content={hero} />
         <Overview content={overview} />

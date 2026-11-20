@@ -9,9 +9,9 @@ import { Logo } from "@/components/ui/logo";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { duration, easeCalm } from "@/config/motion";
 import { isCurrentPath, mainNav } from "@/config/navigation";
-import { siteConfig } from "@/config/site";
-import { whatsappHref } from "@/lib/contact";
+import { phoneHref, whatsappHref } from "@/lib/contact";
 import { cn } from "@/lib/utils";
+import type { SiteContact } from "@/types/content";
 
 const MENU_ID = "mobile-menu";
 /** Desktop navigation appears from this width (Tailwind `lg`). Keep in sync with the classes below. */
@@ -22,7 +22,7 @@ const DESKTOP_QUERY = "(min-width: 64rem)";
  * desktop; a clean hamburger menu below `lg`. Always visible. Transparent
  * over the dark hero, frosted ivory once the page scrolls.
  */
-export function Navbar() {
+export function Navbar({ contact }: { contact: SiteContact }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
@@ -99,7 +99,7 @@ export function Navbar() {
       </header>
 
       <AnimatePresence>
-        {open ? <MobileMenu headerRef={headerRef} pathname={pathname} onClose={close} /> : null}
+        {open ? <MobileMenu headerRef={headerRef} pathname={pathname} onClose={close} contact={contact} /> : null}
       </AnimatePresence>
     </>
   );
@@ -117,7 +117,7 @@ type MobileMenuProps = {
  * header (incl. the close button) and the menu, and screen readers cannot
  * wander into the hidden page behind the overlay.
  */
-function MobileMenu({ headerRef, pathname, onClose }: MobileMenuProps) {
+function MobileMenu({ headerRef, pathname, onClose, contact }: MobileMenuProps & { contact: SiteContact }) {
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -188,14 +188,14 @@ function MobileMenu({ headerRef, pathname, onClose }: MobileMenuProps) {
       {/* Quick contact — uses the configured numbers */}
       <div className="mt-auto grid grid-cols-2 gap-3 pt-8">
         <a
-          href={siteConfig.contact.phoneHref}
+          href={phoneHref(contact)}
           className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/20 text-sm font-medium text-ivory hover:border-white"
         >
           <Phone className="size-4" aria-hidden />
           Call
         </a>
         <a
-          href={whatsappHref()}
+          href={whatsappHref(contact)}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-gold-light text-sm font-semibold text-ink hover:bg-gold-pale"

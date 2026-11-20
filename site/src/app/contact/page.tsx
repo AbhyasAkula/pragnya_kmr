@@ -3,8 +3,7 @@ import { ContactActions, ProjectLocationCard, contactCard } from "@/components/c
 import { ContactVisitForm, ContactVisitFormFallback } from "@/components/contact/contact-visit-form";
 import { SiteShell } from "@/components/layout/site-shell";
 import { PageHero } from "@/components/sections/shared/page-hero";
-import { siteConfig } from "@/config/site";
-import { getContactContent } from "@/lib/data";
+import { getContactContent, getContactDetails, getSiteSettings } from "@/lib/data";
 import { breadcrumbJsonLd, pageMetadata, type Crumb } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +20,7 @@ export async function generateMetadata() {
   return pageMetadata({
     path: "/contact",
     title: "Contact Sales & Book a Site Visit",
-    description: `${hero.description} ${siteConfig.contact.hours}.`,
+    description: `${hero.description} ${(await getContactDetails()).hours}.`,
     image: hero.image,
   });
 }
@@ -32,7 +31,12 @@ export async function generateMetadata() {
  * Site Visit form on the right. Phones: WhatsApp → Call → form → location.
  */
 export default async function ContactPage() {
-  const { hero, form, villaOptions, locationImage } = await getContactContent();
+  const [{ hero, form, villaOptions, locationImage }, contactInfo, settings] = await Promise.all([
+    getContactContent(),
+    getContactDetails(),
+    getSiteSettings(),
+  ]);
+  const context = { contactInfo, bookingsOpen: settings.acceptingOnlineBookings, privacyPolicyUrl: settings.privacyPolicyUrl };
 
   return (
     <SiteShell jsonLd={[breadcrumbJsonLd(crumbs)]}>
@@ -61,8 +65,8 @@ export default async function ContactPage() {
             </h2>
             <p className="mt-3 max-w-md text-stone">{form.description}</p>
             <div className="mt-8 border-t border-line pt-8">
-              <Suspense fallback={<ContactVisitFormFallback villas={villaOptions} />}>
-                <ContactVisitForm villas={villaOptions} anchorId={FORM_ANCHOR} headingId={FORM_HEADING} />
+              <Suspense fallback={<ContactVisitFormFallback villas={villaOptions} context={context} />}>
+                <ContactVisitForm villas={villaOptions} anchorId={FORM_ANCHOR} headingId={FORM_HEADING} context={context} />
               </Suspense>
             </div>
           </div>

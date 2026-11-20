@@ -2,7 +2,8 @@ import { CalendarCheck, Car, Clock, Phone, Sparkles, type LucideIcon } from "luc
 import Image from "next/image";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/ui/section-heading";
-import { siteConfig } from "@/config/site";
+import { phoneHref } from "@/lib/contact";
+import { getContactDetails, getSiteSettings } from "@/lib/data";
 import type { SiteVisitContent, SiteVisitPerkIcon } from "@/types/content";
 import { SiteVisitForm } from "./site-visit-form";
 
@@ -14,7 +15,7 @@ const perkIcons: Record<SiteVisitPerkIcon, LucideIcon> = {
 
 type SiteVisitCtaProps = SiteVisitContent & { villaOptions: string[]; defaultVilla?: string };
 
-export function SiteVisitCta({
+export async function SiteVisitCta({
   image,
   formTitle,
   formSubtitle,
@@ -23,10 +24,11 @@ export function SiteVisitCta({
   defaultVilla,
   ...heading
 }: SiteVisitCtaProps) {
+  const [contact, settings] = await Promise.all([getContactDetails(), getSiteSettings()]);
   const items: { icon: LucideIcon; text: string; href?: string }[] = [
     ...perks.map((p) => ({ icon: perkIcons[p.icon], text: p.text })),
-    { icon: Clock, text: siteConfig.contact.hours },
-    { icon: Phone, text: siteConfig.contact.phone, href: siteConfig.contact.phoneHref },
+    { icon: Clock, text: contact.hours },
+    { icon: Phone, text: contact.phone, href: phoneHref(contact) },
   ];
 
   return (
@@ -59,7 +61,13 @@ export function SiteVisitCta({
           <div className="relative rounded-[1.75rem] bg-ivory p-6 shadow-2xl sm:p-10">
             <p className="font-display text-3xl text-ink">{formTitle}</p>
             <p className="mt-2 mb-8 text-sm text-stone">{formSubtitle}</p>
-            <SiteVisitForm villaOptions={villaOptions} defaultVilla={defaultVilla} />
+            <SiteVisitForm
+              villaOptions={villaOptions}
+              defaultVilla={defaultVilla}
+              contactInfo={contact}
+              bookingsOpen={settings.acceptingOnlineBookings}
+              privacyPolicyUrl={settings.privacyPolicyUrl}
+            />
           </div>
         </Reveal>
       </div>

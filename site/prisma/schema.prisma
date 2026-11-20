@@ -55,8 +55,17 @@ model SiteVisitRequest {
   createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
+  /// Staff member responsible for this lead (admin dashboard).
+  assignedToId String?             @map("assigned_to_id") @db.Uuid
+  assignedTo   StaffMember?        @relation("AssignedLeads", fields: [assignedToId], references: [id], onDelete: SetNull)
+  /// Next planned follow-up with the customer.
+  followUpAt   DateTime?           @map("follow_up_at") @db.Timestamptz(3)
+  activities   SiteVisitActivity[]
+
   /// One open request per phone number per visit date.
   @@unique([phone, visitDate], map: "site_visit_requests_open_phone_date_key", where: raw("status = ANY (ARRAY['NEW'::\"SiteVisitStatus\", 'CONTACTED'::\"SiteVisitStatus\", 'CONFIRMED'::\"SiteVisitStatus\"])"))
+  @@index([assignedToId])
+  @@index([followUpAt])
   @@index([status, createdAt(sort: Desc)])
   @@index([createdAt(sort: Desc)])
   @@index([visitDate])
@@ -75,5 +84,288 @@ model RateLimitBucket {
   @@id([key, windowStart])
   @@index([windowStart])
   @@map("rate_limit_buckets")
+  @@schema("aurelia")
+}
+
+// ---------------------------------------------------------------------------
+// Admin dashboard (Phase 3)
+// ---------------------------------------------------------------------------
+
+enum StaffRole {
+  OWNER
+  STAFF
+
+  @@schema("aurelia")
+}
+
+enum StaffStatus {
+  /// Invite link issued; password not yet set.
+  INVITED
+  ACTIVE
+  DISABLED
+
+  @@schema("aurelia")
+}
+
+/// Features a STAFF member can be granted. Staff management is OWNER-only
+/// and deliberately not grantable, so staff can never escalate privileges.
+enum Permission {
+  BOOKINGS
+  VILLAS
+  GALLERY
+  CONSTRUCTION
+  CONTENT
+  SETTINGS
+  AUDIT_LOG
+
+  @@schema("aurelia")
+}
+
+/// Admin user. `id` equals the Supabase Auth user id (auth.users.id).
+model StaffMember {
+  id           String       @id @db.Uuid
+  email        String       @unique @db.VarChar(254)
+  fullName     String       @map("full_name") @db.VarChar(80)
+  role         StaffRole    @default(STAFF)
+  permissions  Permission[] @default([])
+  status       StaffStatus  @default(INVITED)
+  invitedById  String?      @map("invited_by_id") @db.Uuid
+  lastSignInAt DateTime?    @map("last_sign_in_at") @db.Timestamptz(3)
+  disabledAt   DateTime?    @map("disabled_at") @db.Timestamptz(3)
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  assignedLeads SiteVisitRequest[]  @relation("AssignedLeads")
+  activities    SiteVisitActivity[]
+
+  @@index([status])
+  @@map("staff_members")
+  @@schema("aurelia")
+}
+
+enum ActivityType {
+  NOTE
+  STATUS_CHANGED
+  ASSIGNED
+  FOLLOW_UP_SET
+  FOLLOW_UP_CLEARED
+
+  @@schema("aurelia")
+}
+
+/// Timeline of a booking: notes and changes made by staff.
+model SiteVisitActivity {
+  id        String           @id @default(uuid(7)) @db.Uuid
+  requestId String           @map("request_id") @db.Uuid
+  request   SiteVisitRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  actorId   String?          @map("actor_id") @db.Uuid
+  actor     StaffMember?     @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  type      ActivityType
+  body      String?          @db.VarChar(2000)
+  fromValue String?          @map("from_value") @db.VarChar(120)
+  toValue   String?          @map("to_value") @db.VarChar(120)
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([requestId, createdAt])
+  @@map("site_visit_activities")
+  @@schema("aurelia")
+}
+
+enum PublishStatus {
+  DRAFT
+  PUBLISHED
+
+  @@schema("aurelia")
+}
+
+enum VillaAvailability {
+  AVAILABLE
+  LIMITED
+  SOLD_OUT
+
+  @@schema("aurelia")
+}
+
+/// Villa model shown on the homepage, /villas and /villas/[slug].
+model Villa {
+  id            String            @id @default(uuid(7)) @db.Uuid
+  slug          String            @unique @db.VarChar(80)
+  name          String            @db.VarChar(80)
+  configuration String            @db.VarChar(60)
+  builtUpArea   Int               @map("built_up_area")
+  plotArea      Int               @map("plot_area")
+  bedrooms      Int
+  bathrooms     Int
+  floors        Int
+  carParks      Int               @map("car_parks")
+  unitCount     Int               @map("unit_count")
+  /// Indicative starting price in INR.
+  startingPrice Int               @map("starting_price")
+  availability  VillaAvailability @default(AVAILABLE)
+  summary       String            @db.VarChar(300)
+  description   String[]
+  highlights    String[]
+  /// { src, alt }
+  image         Json
+  /// [{ id, src, alt, caption }]
+  gallery       Json              @default("[]")
+  /// [{ id, label, area, rooms[], drawing? }]
+  floorPlans    Json              @default("[]") @map("floor_plans")
+  sortOrder     Int               @default(0) @map("sort_order")
+  status        PublishStatus     @default(DRAFT)
+  publishedAt   DateTime?         @map("published_at") @db.Timestamptz(3)
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([status, sortOrder])
+  @@map("villas")
+  @@schema("aurelia")
+}
+
+enum GalleryCategory {
+  VILLAS
+  INTERIORS
+  AMENITIES
+  COMMUNITY
+
+  @@schema("aurelia")
+}
+
+enum MediaSource {
+  RENDER
+  PHOTO
+
+  @@schema("aurelia")
+}
+
+enum GalleryKind {
+  IMAGE
+  VIDEO
+
+  @@schema("aurelia")
+}
+
+model GalleryItem {
+  id            String          @id @default(uuid(7)) @db.Uuid
+  kind          GalleryKind     @default(IMAGE)
+  /// Image (or video cover) URL.
+  src           String          @db.VarChar(600)
+  alt           String          @db.VarChar(200)
+  caption       String          @db.VarChar(120)
+  category      GalleryCategory
+  source        MediaSource
+  /// Shown in the homepage preview (in sort order).
+  featured      Boolean         @default(false)
+  videoUrl      String?         @map("video_url") @db.VarChar(600)
+  videoDuration String?         @map("video_duration") @db.VarChar(16)
+  mediaId       String?         @map("media_id") @db.Uuid
+  media         MediaAsset?     @relation(fields: [mediaId], references: [id], onDelete: SetNull)
+  sortOrder     Int             @default(0) @map("sort_order")
+  status        PublishStatus   @default(DRAFT)
+  createdAt     DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([status, sortOrder])
+  @@map("gallery_items")
+  @@schema("aurelia")
+}
+
+enum MilestoneStatus {
+  COMPLETED
+  IN_PROGRESS
+  UPCOMING
+
+  @@schema("aurelia")
+}
+
+model ConstructionUpdate {
+  id              String        @id @default(uuid(7)) @db.Uuid
+  date            DateTime      @db.Date
+  title           String        @db.VarChar(120)
+  summary         String        @db.VarChar(1500)
+  overallProgress Int           @map("overall_progress")
+  /// [{ label, progress }]
+  areas           Json          @default("[]")
+  /// [{ id, src, alt, caption, source, kind?, video? }]
+  media           Json          @default("[]")
+  /// Illustrative sample content (labelled as such on the site).
+  isSample        Boolean       @default(false) @map("is_sample")
+  status          PublishStatus @default(DRAFT)
+  publishedAt     DateTime?     @map("published_at") @db.Timestamptz(3)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([status, date(sort: Desc)])
+  @@map("construction_updates")
+  @@schema("aurelia")
+}
+
+model ConstructionMilestone {
+  id        String          @id @default(uuid(7)) @db.Uuid
+  title     String          @db.VarChar(120)
+  status    MilestoneStatus
+  /// Display date, e.g. "Mar 2026" or "Target: Dec 2027".
+  dateLabel String          @map("date_label") @db.VarChar(60)
+  sortOrder Int             @default(0) @map("sort_order")
+  visible   Boolean         @default(true)
+  createdAt DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([sortOrder])
+  @@map("construction_milestones")
+  @@schema("aurelia")
+}
+
+/// Structured, validated site copy (homepage sections, amenities, master
+/// plan, project facts, contact details, settings), keyed by section.
+model ContentEntry {
+  key         String   @id @db.VarChar(60)
+  data        Json
+  updatedById String?  @map("updated_by_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("content_entries")
+  @@schema("aurelia")
+}
+
+/// Image uploaded through the dashboard (stored in Supabase Storage).
+model MediaAsset {
+  id           String        @id @default(uuid(7)) @db.Uuid
+  storagePath  String        @unique @map("storage_path") @db.VarChar(300)
+  url          String        @db.VarChar(600)
+  mimeType     String        @map("mime_type") @db.VarChar(40)
+  bytes        Int
+  width        Int
+  height       Int
+  originalName String        @map("original_name") @db.VarChar(160)
+  uploadedById String?       @map("uploaded_by_id") @db.Uuid
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  galleryItems GalleryItem[]
+
+  @@index([createdAt(sort: Desc)])
+  @@map("media_assets")
+  @@schema("aurelia")
+}
+
+/// Append-only record of important admin actions. Never stores customer
+/// phone numbers or messages.
+model AuditLog {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  actorId    String?  @map("actor_id") @db.Uuid
+  actorEmail String?  @map("actor_email") @db.VarChar(254)
+  actorRole  String?  @map("actor_role") @db.VarChar(20)
+  action     String   @db.VarChar(60)
+  entityType String   @map("entity_type") @db.VarChar(40)
+  entityId   String?  @map("entity_id") @db.VarChar(80)
+  summary    String   @db.VarChar(300)
+  metadata   Json?
+  ipHash     String?  @map("ip_hash") @db.VarChar(40)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([createdAt(sort: Desc)])
+  @@index([actorId, createdAt(sort: Desc)])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
   @@schema("aurelia")
 }

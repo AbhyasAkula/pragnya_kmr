@@ -229,3 +229,72 @@ export type ConstructionUpdate = {
   /** true while the data is illustrative sample content. */
   sample: boolean;
 };
+
+/* ---------------------------------------------------------------------------
+ * Editable content (admin dashboard). Stored as validated JSON per section in
+ * aurelia.content_entries; numbers derived from other data are not stored.
+ * ------------------------------------------------------------------------- */
+
+/** Hero copy as stored; `facts` are derived from Project details at render time. */
+export type HeroCopy = Omit<HeroContent, "facts">;
+
+/** Overview copy as stored; `stats` are derived from Project details. */
+export type OverviewCopy = Omit<ProjectOverview, "stats">;
+
+/** Editable project facts. The villa count is derived from published villas. */
+export type ProjectFactsInput = {
+  landAcres: number;
+  openSpacePercent: number;
+  clubhouseSqFt: number;
+  amenityCount: number;
+  reraStatus: string;
+  phaseLabel: string;
+  possession: string;
+  configurations: string;
+};
+
+export type ProjectFacts = ProjectFactsInput & { villaCount: number };
+
+/** Public contact details (Content → Contact details). */
+export type SiteContact = {
+  phone: string;
+  /** International number for wa.me, digits only. */
+  whatsapp: string;
+  whatsappMessage: string;
+  email: string;
+  hours: string;
+  street: string;
+  city: string;
+  region: string;
+  postalCode: string;
+  mapUrl: string;
+};
+
+/** Business settings (Settings). */
+export type SiteSettings = {
+  /** Kill switch for the online booking form. */
+  acceptingOnlineBookings: boolean;
+  reraNumber: string;
+  /** Client's published privacy policy, or null to show no link. */
+  privacyPolicyUrl: string | null;
+};
+
+export type MasterPlanContent = {
+  /** Approved master plan image. Absent = placeholder diagram is rendered. */
+  drawing?: ImageAsset;
+  canvas: { width: number; height: number };
+  zones: MasterPlanZone[];
+  disclaimer: string;
+};
+
+export type SpecificationsContent = {
+  groups: SpecificationGroup[];
+  note: string;
+  floorPlanNote: string;
+};
+
+export type AmenitiesContent = {
+  categories: AmenityCategory[];
+  items: Amenity[];
+  features: AmenityFeature[];
+};

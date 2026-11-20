@@ -1,6 +1,7 @@
 import { after } from "next/server";
 import { siteConfig, siteUrl } from "@/config/site";
-import { getEnquiryVillaOptions } from "@/lib/data";
+import { getContactDetails, getEnquiryVillaOptions } from "@/lib/data";
+import { readContentNow } from "@/lib/server/site-data";
 import { todayInTimeZone } from "@/lib/dates";
 import { logServerEvent } from "@/lib/server/log";
 import { consume, hashKey, pruneRateLimits, type RateLimitRule } from "@/lib/server/rate-limit";
@@ -36,7 +37,8 @@ const PHONE_RULES: RateLimitRule[] = [{ name: "phone-1d", limit: 5, windowSecond
 /** Site-wide safety valve against distributed floods. */
 const GLOBAL_RULES: RateLimitRule[] = [{ name: "global-1h", limit: 300, windowSeconds: 60 * 60 }];
 
-const callUs = `please call ${siteConfig.contact.phone} or message us on WhatsApp`;
+/** Fallback wording; the phone number comes from the managed contact details. */
+const callUs = (phone: string) => `please call ${phone} or message us on WhatsApp`;
 
 function respond(status: number, body: SiteVisitResponse, headers: Record<string, string> = {}) {
   return Response.json(body, {
@@ -45,11 +47,11 @@ function respond(status: number, body: SiteVisitResponse, headers: Record<string
   });
 }
 
-const unavailable = () =>
+const unavailable = (phone: string) =>
   respond(503, {
     status: "error",
     code: "unavailable",
-    message: `Sorry — we couldn't save your request just now and nothing was booked. Please try again in a few minutes, or ${callUs}.`,
+    message: `Sorry — we couldn't save your request just now and nothing was booked. Please try again in a few minutes, or ${callUs(phone)}.`,
     fallback: true,
   });
 
@@ -117,7 +119,11 @@ function successBody(reference: string, name?: string): SiteVisitResponse {
 }
 
 export async function POST(request: Request) {
-  if (!siteConfig.features.leadStorageConnected) return unavailable();
+  // Managed contact details and the online-booking switch (cached reads).
+  // The booking switch is read uncached so turning it off/on takes effect immediately.
+  const [contact, settings] = await Promise.all([getContactDetails().catch(() => null), readContentNow("settings").catch(() => null)]);
+  const phone = contact?.phone ?? siteConfig.contact.phone;
+  if (!siteConfig.features.leadStorageConnected || !settings?.acceptingOnlineBookings) return unavailable(phone);
 
   const contentType = request.headers.get("content-type") ?? "";
   if (!contentType.toLowerCase().startsWith("application/json")) {
@@ -162,7 +168,7 @@ export async function POST(request: Request) {
         {
           status: "error",
           code: "rate_limited",
-          message: `Too many requests from this connection. Please wait a few minutes, or ${callUs}.`,
+          message: `Too many requests from this connection. Please wait a few minutes, or ${callUs(phone)}.`,
           fallback: true,
         },
         { "Retry-After": String(ipLimit.retryAfterSeconds) },
@@ -176,7 +182,7 @@ export async function POST(request: Request) {
       return respond(400, {
         status: "error",
         code: "rejected",
-        message: `We couldn't accept this request. Please ${callUs}.`,
+        message: `We couldn't accept this request. Please ${callUs(phone)}.`,
         fallback: true,
       });
     }
@@ -210,7 +216,7 @@ export async function POST(request: Request) {
         {
           status: "error",
           code: "rate_limited",
-          message: `We've received several requests from this number today. Our team will be in touch — or ${callUs}.`,
+          message: `We've received several requests from this number today. Our team will be in touch — or ${callUs(phone)}.`,
           fallback: true,
         },
         { "Retry-After": String(phoneLimit.retryAfterSeconds) },
@@ -228,7 +234,7 @@ export async function POST(request: Request) {
       return respond(409, {
         status: "error",
         code: "duplicate",
-        message: `We already have a site-visit request from this number for ${formatDate(saved.visitDate)}, so we haven't created another. Our team will call you to confirm it. To change it, ${callUs}.`,
+        message: `We already have a site-visit request from this number for ${formatDate(saved.visitDate)}, so we haven't created another. Our team will call you to confirm it. To change it, ${callUs(phone)}.`,
         fallback: true,
       });
     }
@@ -238,6 +244,6 @@ export async function POST(request: Request) {
   } catch (error) {
     // Database/config failure: nothing was saved. Log the class/code only.
     logServerEvent("site_visit.storage_failed", error);
-    return unavailable();
+    return unavailable(phone);
   }
 }

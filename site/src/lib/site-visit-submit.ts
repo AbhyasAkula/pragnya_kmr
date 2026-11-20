@@ -5,6 +5,7 @@
  * request was saved.
  */
 import { siteConfig } from "@/config/site";
+import type { SiteContact } from "@/types/content";
 import { todayInTimeZone } from "@/lib/dates";
 import {
   siteVisitFields,
@@ -15,7 +16,6 @@ import {
   type SiteVisitState,
 } from "@/lib/validation/site-visit";
 
-const callUs = `please call ${siteConfig.contact.phone} or message us on WhatsApp`;
 
 /** RFC 4122 v4 UUID; falls back to getRandomValues where randomUUID is unavailable (non-HTTPS). */
 export function newIdempotencyKey(): string {
@@ -29,16 +29,22 @@ export function newIdempotencyKey(): string {
 
 export async function submitSiteVisit(
   formData: FormData,
-  { idempotencyKey, villaOptions }: { idempotencyKey: string; villaOptions: readonly string[] },
+  {
+    idempotencyKey,
+    villaOptions,
+    contact,
+    bookingsOpen,
+  }: { idempotencyKey: string; villaOptions: readonly string[]; contact: Pick<SiteContact, "phone">; bookingsOpen: boolean },
 ): Promise<SiteVisitState> {
+  const callUs = `please call ${contact.phone} or message us on WhatsApp`;
   const values = Object.fromEntries(
     siteVisitFields.map((f) => [f, String(formData.get(f) ?? "")]),
   ) as Record<SiteVisitField, string>;
 
-  if (!siteConfig.features.leadStorageConnected) {
+  if (!siteConfig.features.leadStorageConnected || !bookingsOpen) {
     return {
       status: "error",
-      message: `Online booking isn't available yet, so this request was not sent. To book a visit, ${callUs}.`,
+      message: `Online booking isn't available right now, so this request was not sent. To book a visit, ${callUs}.`,
       values,
       fallback: true,
     };

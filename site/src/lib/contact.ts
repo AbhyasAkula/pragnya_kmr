@@ -1,17 +1,24 @@
-import { siteConfig } from "@/config/site";
+import type { SiteContact } from "@/types/content";
 
 /**
- * Contact links built only from centralised config (src/config/site.ts /
- * NEXT_PUBLIC_CONTACT_* env vars) — never hardcode numbers in components.
+ * Contact links built only from the managed contact details (admin
+ * dashboard → Content → Contact details) — never hardcode numbers in components.
  */
 
-/** WhatsApp click-to-chat link with a prefilled message. */
-export function whatsappHref(message: string = siteConfig.contact.whatsappMessage) {
-  return `https://wa.me/${siteConfig.contact.whatsapp}?text=${encodeURIComponent(message)}`;
+/** Strips formatting; keeps a leading "+". */
+export function phoneHref(contact: Pick<SiteContact, "phone">) {
+  const digits = contact.phone.replace(/\D/g, "");
+  return `tel:${contact.phone.trim().startsWith("+") ? "+" : ""}${digits}`;
 }
 
-export const phoneHref = siteConfig.contact.phoneHref;
-export const emailHref = `mailto:${siteConfig.contact.email}`;
+/** WhatsApp click-to-chat link with a prefilled message. */
+export function whatsappHref(contact: Pick<SiteContact, "whatsapp" | "whatsappMessage">, message = contact.whatsappMessage) {
+  return `https://wa.me/${contact.whatsapp}?text=${encodeURIComponent(message)}`;
+}
+
+export function emailHref(contact: Pick<SiteContact, "email">) {
+  return `mailto:${contact.email}`;
+}
 
 /** Contact page URL for booking a visit, optionally pre-selecting a villa. */
 export function contactHref(villaSlug?: string) {

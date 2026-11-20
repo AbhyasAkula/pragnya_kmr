@@ -21,6 +21,7 @@ import { emailHref, phoneHref, whatsappHref } from "@/lib/contact";
 import { addDays, todayInTimeZone } from "@/lib/dates";
 import { newIdempotencyKey, submitSiteVisit } from "@/lib/site-visit-submit";
 import { cn } from "@/lib/utils";
+import type { SiteContact } from "@/types/content";
 import {
   siteVisitFields,
   siteVisitLimits,
@@ -29,7 +30,6 @@ import {
 } from "@/lib/validation/site-visit";
 
 const initialState: SiteVisitState = { status: "idle" };
-const isDemo = !siteConfig.features.leadStorageConnected;
 
 const inputClass =
   "mt-2 block min-h-12 w-full rounded-xl border border-field bg-white px-4 py-3 text-base text-ink transition-[border-color,box-shadow] duration-300 placeholder:text-placeholder focus:border-gold focus:ring-4 focus:ring-gold-light/30 focus:outline-none aria-invalid:border-danger";
@@ -64,6 +64,11 @@ type SiteVisitFormProps = {
   appearance?: Appearance;
   /** Contact design: villa name → short description (e.g. "3 BHK Villa") for the option cards. */
   villaDetails?: Record<string, string>;
+  /** Managed contact details (call / WhatsApp fallbacks, data-request email). */
+  contactInfo: SiteContact;
+  /** false = online booking switched off in Settings (form explains how to book instead). */
+  bookingsOpen: boolean;
+  privacyPolicyUrl: string | null;
 };
 
 /** Remounting via `key` gives a clean form (and fresh action state) for a new request. */
@@ -77,9 +82,13 @@ function EnquiryForm({
   defaultVilla,
   appearance = "default",
   villaDetails = {},
+  contactInfo,
+  bookingsOpen,
+  privacyPolicyUrl,
   onReset,
 }: SiteVisitFormProps & { onReset: () => void }) {
   const contact = appearance === "contact";
+  const isDemo = !siteConfig.features.leadStorageConnected || !bookingsOpen;
   const field = (icon: LucideIcon) => (contact ? { appearance, icon } : { appearance });
   const control = contact ? contactInputClass : inputClass;
   // One key per form instance, created on first submit (never during
@@ -88,7 +97,7 @@ function EnquiryForm({
   const idempotencyKey = useRef<string | null>(null);
   const [state, formAction, pending] = useActionState((_prev: SiteVisitState, formData: FormData) => {
     idempotencyKey.current ??= newIdempotencyKey();
-    return submitSiteVisit(formData, { idempotencyKey: idempotencyKey.current, villaOptions });
+    return submitSiteVisit(formData, { idempotencyKey: idempotencyKey.current, villaOptions, contact: contactInfo, bookingsOpen });
   }, initialState);
   const formRef = useRef<HTMLFormElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
@@ -129,10 +138,10 @@ function EnquiryForm({
         >
           <Info className="mt-0.5 size-4 shrink-0 text-gold" aria-hidden />
           <span>
-            <strong className="font-semibold">Demo form.</strong> Submissions are not stored or sent
-            yet. To book a visit, call{" "}
-            <a href={siteConfig.contact.phoneHref} className="font-semibold underline underline-offset-2">
-              {siteConfig.contact.phone}
+            <strong className="font-semibold">Online booking is unavailable right now.</strong> To book a visit,
+            call{" "}
+            <a href={phoneHref(contactInfo)} className="font-semibold underline underline-offset-2">
+              {contactInfo.phone}
             </a>
             .
           </span>
@@ -252,14 +261,14 @@ function EnquiryForm({
               {state.fallback ? (
                 <div className="mt-3 flex flex-wrap gap-3">
                   <a
-                    href={phoneHref}
+                    href={phoneHref(contactInfo)}
                     className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-field bg-white px-4 text-sm font-semibold text-ink hover:border-stone"
                   >
                     <Phone className="size-4 text-gold" aria-hidden />
-                    Call {siteConfig.contact.phone}
+                    Call {contactInfo.phone}
                   </a>
                   <a
-                    href={whatsappHref()}
+                    href={whatsappHref(contactInfo)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-field bg-white px-4 text-sm font-semibold text-ink hover:border-stone"
@@ -295,7 +304,7 @@ function EnquiryForm({
               Book a Site Visit
             </>
           ) : isDemo ? (
-            "Try the demo form"
+            "Call to book"
           ) : (
             "Schedule my visit"
           )}
@@ -305,10 +314,9 @@ function EnquiryForm({
           <p id="demo-notice" className="mt-4 flex items-start gap-2 text-sm text-stone">
             <Info className="mt-0.5 size-4 shrink-0 text-gold" aria-hidden />
             <span>
-              <strong className="font-semibold text-ink">Demo mode:</strong> requests are not stored or sent yet. To book
-              now, call{" "}
-              <a href={siteConfig.contact.phoneHref} className="font-semibold whitespace-nowrap text-ink underline underline-offset-2">
-                {siteConfig.contact.phone}
+              <strong className="font-semibold text-ink">Online booking is unavailable right now.</strong> To book, call{" "}
+              <a href={phoneHref(contactInfo)} className="font-semibold whitespace-nowrap text-ink underline underline-offset-2">
+                {contactInfo.phone}
               </a>
               .
             </span>
@@ -316,14 +324,14 @@ function EnquiryForm({
         ) : null}
         <p className={cn("text-xs text-stone", contact ? "mt-2 pl-6" : "mt-4 text-center")}>
           To access, correct or delete your details, email{" "}
-          <a href={emailHref} className="underline underline-offset-2 hover:text-ink">
-            {siteConfig.contact.email}
+          <a href={emailHref(contactInfo)} className="underline underline-offset-2 hover:text-ink">
+            {contactInfo.email}
           </a>
           .
-          {siteConfig.privacy.policyUrl ? (
+          {privacyPolicyUrl ? (
             <>
               {" "}
-              <a href={siteConfig.privacy.policyUrl} className="underline underline-offset-2 hover:text-ink">
+              <a href={privacyPolicyUrl} className="underline underline-offset-2 hover:text-ink">
                 Privacy policy
               </a>
               .

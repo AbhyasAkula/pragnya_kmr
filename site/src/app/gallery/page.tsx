@@ -51,10 +51,12 @@ export default async function GalleryPage() {
             </Reveal>
           </div>
 
-          <p className="mt-8 flex gap-3 rounded-xl border border-gold/30 bg-gold-light/15 px-4 py-3 text-sm text-ink">
-            <Info className="mt-0.5 size-4 shrink-0 text-gold" aria-hidden />
-            {notice}
-          </p>
+          {notice ? (
+            <p className="mt-8 flex gap-3 rounded-xl border border-gold/30 bg-gold-light/15 px-4 py-3 text-sm text-ink">
+              <Info className="mt-0.5 size-4 shrink-0 text-gold" aria-hidden />
+              {notice}
+            </p>
+          ) : null}
 
           <div className="mt-10">
             <GalleryBrowser items={items} categories={categories} />

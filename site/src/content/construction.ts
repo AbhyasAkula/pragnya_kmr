@@ -6,7 +6,6 @@
  */
 import type { ConstructionMilestone, ConstructionUpdate } from "@/types/content";
 import { images } from "./images";
-import { projectFacts } from "./project";
 
 export const constructionMilestones: ConstructionMilestone[] = [
   { id: "m-1", title: "Site mobilisation", status: "completed", date: "Mar 2026" },
@@ -16,7 +15,7 @@ export const constructionMilestones: ConstructionMilestone[] = [
   { id: "m-5", title: "Clubhouse structure", status: "in-progress", date: "Started Nov 2026" },
   { id: "m-6", title: "Services & finishing works", status: "upcoming", date: "2027" },
   { id: "m-7", title: "Landscape & amenities", status: "upcoming", date: "2027" },
-  { id: "m-8", title: "Phase I handover", status: "upcoming", date: `Target: ${projectFacts.possession}` },
+  { id: "m-8", title: "Phase I handover", status: "upcoming", date: "Target: {possession}" },
 ];
 
 /** Newest first. The first entry is featured as the latest update. */
