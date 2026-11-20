@@ -13,11 +13,13 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useActionState, useEffect, useRef, useState, type ReactNode } from "react";
-import { requestSiteVisit } from "@/actions/site-visit";
 import { Button } from "@/components/ui/button";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { duration, easeLuxe } from "@/config/motion";
 import { siteConfig } from "@/config/site";
+import { emailHref, phoneHref, whatsappHref } from "@/lib/contact";
 import { addDays, todayInTimeZone } from "@/lib/dates";
+import { newIdempotencyKey, submitSiteVisit } from "@/lib/site-visit-submit";
 import { cn } from "@/lib/utils";
 import {
   siteVisitFields,
@@ -80,7 +82,14 @@ function EnquiryForm({
   const contact = appearance === "contact";
   const field = (icon: LucideIcon) => (contact ? { appearance, icon } : { appearance });
   const control = contact ? contactInputClass : inputClass;
-  const [state, formAction, pending] = useActionState(requestSiteVisit, initialState);
+  // One key per form instance, created on first submit (never during
+  // prerender): a retried or double-sent submission maps to the same booking.
+  // "Start a new request" remounts the form, which starts a fresh key.
+  const idempotencyKey = useRef<string | null>(null);
+  const [state, formAction, pending] = useActionState((_prev: SiteVisitState, formData: FormData) => {
+    idempotencyKey.current ??= newIdempotencyKey();
+    return submitSiteVisit(formData, { idempotencyKey: idempotencyKey.current, villaOptions });
+  }, initialState);
   const formRef = useRef<HTMLFormElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
   const errors = state.errors ?? {};
@@ -106,7 +115,7 @@ function EnquiryForm({
   }, [state]);
 
   if (state.status === "success") {
-    return <SuccessPanel demo={Boolean(state.demo)} message={state.message} onReset={onReset} />;
+    return <SuccessPanel message={state.message} onReset={onReset} />;
   }
 
   const describedBy = (field: SiteVisitField) => (errors[field] ? `${field}-error` : undefined);
@@ -227,18 +236,40 @@ function EnquiryForm({
         <input id="company" name="company" type="text" tabIndex={-1} autoComplete="off" />
       </div>
 
+      <ConsentField checked={values.consent === "on"} error={errors.consent} />
+
       <div className="sm:col-span-2">
         <AnimatePresence>
           {state.status === "error" && state.message ? (
-            <motion.p
+            <motion.div
               role="alert"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="mb-4 text-sm font-medium text-danger"
+              className="mb-4"
             >
-              {state.message}
-            </motion.p>
+              <p className="text-sm font-medium text-danger">{state.message}</p>
+              {state.fallback ? (
+                <div className="mt-3 flex flex-wrap gap-3">
+                  <a
+                    href={phoneHref}
+                    className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-field bg-white px-4 text-sm font-semibold text-ink hover:border-stone"
+                  >
+                    <Phone className="size-4 text-gold" aria-hidden />
+                    Call {siteConfig.contact.phone}
+                  </a>
+                  <a
+                    href={whatsappHref()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-field bg-white px-4 text-sm font-semibold text-ink hover:border-stone"
+                  >
+                    <WhatsAppIcon className="size-4 text-whatsapp" />
+                    WhatsApp us
+                  </a>
+                </div>
+              ) : null}
+            </motion.div>
           ) : null}
         </AnimatePresence>
         <Button
@@ -284,27 +315,68 @@ function EnquiryForm({
           </p>
         ) : null}
         <p className={cn("text-xs text-stone", contact ? "mt-2 pl-6" : "mt-4 text-center")}>
-          By submitting, you agree to be contacted about {siteConfig.name}. We never share your details.
+          To access, correct or delete your details, email{" "}
+          <a href={emailHref} className="underline underline-offset-2 hover:text-ink">
+            {siteConfig.contact.email}
+          </a>
+          .
+          {siteConfig.privacy.policyUrl ? (
+            <>
+              {" "}
+              <a href={siteConfig.privacy.policyUrl} className="underline underline-offset-2 hover:text-ink">
+                Privacy policy
+              </a>
+              .
+            </>
+          ) : null}
         </p>
       </div>
     </form>
   );
 }
 
-function SuccessPanel({
-  demo,
-  message,
-  onReset,
-}: {
-  demo: boolean;
-  message?: string;
-  onReset: () => void;
-}) {
+/**
+ * Consent to be contacted (required). The wording is versioned: bump
+ * `siteConfig.privacy.consentVersion` whenever it changes.
+ */
+function ConsentField({ checked, error }: { checked: boolean; error?: string }) {
+  return (
+    <div className="sm:col-span-2">
+      <label htmlFor="consent" className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed text-stone">
+        <input
+          id="consent"
+          name="consent"
+          type="checkbox"
+          value="on"
+          required
+          defaultChecked={checked}
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? "consent-error" : undefined}
+          className="mt-0.5 size-5 shrink-0 cursor-pointer rounded accent-gold"
+        />
+        <span>
+          I agree to {siteConfig.developer} using my name, phone number and visit details to contact me about this site visit
+          to {siteConfig.name}.
+          <span aria-hidden className="text-danger">
+            {" "}
+            *
+          </span>
+        </span>
+      </label>
+      {error ? (
+        <p id="consent-error" className="mt-2 text-sm text-danger">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function SuccessPanel({ message, onReset }: { message?: string; onReset: () => void }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   // Move focus to the result so screen-reader and keyboard users land on it.
   useEffect(() => headingRef.current?.focus(), []);
 
-  const Icon = demo ? Info : CheckCircle2;
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -312,9 +384,9 @@ function SuccessPanel({
       transition={{ duration: duration.base, ease: easeLuxe }}
       className="flex flex-col items-center py-12 text-center"
     >
-      <Icon className={cn("size-14", demo ? "text-gold" : "text-success")} strokeWidth={1.25} aria-hidden />
+      <CheckCircle2 className="size-14 text-success" strokeWidth={1.25} aria-hidden />
       <h3 ref={headingRef} tabIndex={-1} className="mt-6 text-3xl text-ink focus:outline-none">
-        {demo ? "Demo only — nothing was sent" : "Your visit is requested"}
+        Your visit is requested
       </h3>
       <p className="mt-3 max-w-sm text-stone">{message}</p>
       <Button variant="outline" className="mt-8" onClick={onReset}>

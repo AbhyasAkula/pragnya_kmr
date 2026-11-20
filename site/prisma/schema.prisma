@@ -1,0 +1,79 @@
+// Aurelia Enclave — lead storage.
+//
+// Tables live in the private `aurelia` schema, which Supabase's Data API
+// (PostgREST/GraphQL) does not expose. The migration also revokes access for
+// the `anon`/`authenticated` roles and enables RLS as defence in depth, so
+// booking data is reachable only through this app's server-side code.
+//
+// Change the schema with `npm run db:migrate:dev -- --name <change>`; deploy
+// with `npm run db:migrate`. Never edit an applied migration.
+
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["partialIndexes"]
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["aurelia"]
+}
+
+/// Sales pipeline status. A new web request is NEW — never an automatically
+/// confirmed appointment.
+enum SiteVisitStatus {
+  NEW
+  CONTACTED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+
+  @@schema("aurelia")
+}
+
+/// A "Book a Site Visit" request submitted through the website.
+model SiteVisitRequest {
+  id             String          @id @default(uuid(7)) @db.Uuid
+  /// Customer's name as entered (trimmed, whitespace collapsed).
+  name           String          @db.VarChar(80)
+  /// Normalised: digits only, with a leading "+" when a country code was given.
+  phone          String          @db.VarChar(16)
+  /// Preferred visit date (calendar date in Asia/Kolkata, no time).
+  visitDate      DateTime        @map("visit_date") @db.Date
+  /// Villa model name the customer is interested in, if any.
+  villa          String?         @db.VarChar(80)
+  message        String?         @db.VarChar(1000)
+  status         SiteVisitStatus @default(NEW)
+  /// Site path the form was submitted from, e.g. "/contact" or "/villas/x".
+  sourcePath     String?         @map("source_path") @db.VarChar(200)
+  /// When the customer accepted the privacy notice, and which wording.
+  consentAt      DateTime        @map("consent_at") @db.Timestamptz(3)
+  consentVersion String          @map("consent_version") @db.VarChar(40)
+  /// Client-generated per-attempt key: retries of the same submission
+  /// return the original booking instead of creating a second one.
+  idempotencyKey String          @unique @map("idempotency_key") @db.Uuid
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  /// One open request per phone number per visit date.
+  @@unique([phone, visitDate], map: "site_visit_requests_open_phone_date_key", where: raw("status = ANY (ARRAY['NEW'::\"SiteVisitStatus\", 'CONTACTED'::\"SiteVisitStatus\", 'CONFIRMED'::\"SiteVisitStatus\"])"))
+  @@index([status, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@index([visitDate])
+  @@map("site_visit_requests")
+  @@schema("aurelia")
+}
+
+/// Fixed-window counters for rate limiting (shared across serverless
+/// instances, unlike in-memory limits). Keys hold salted hashes, never raw
+/// IPs or phone numbers. Rows older than a day are pruned automatically.
+model RateLimitBucket {
+  key         String   @db.VarChar(100)
+  windowStart DateTime @map("window_start") @db.Timestamptz(3)
+  hits        Int      @default(0)
+
+  @@id([key, windowStart])
+  @@index([windowStart])
+  @@map("rate_limit_buckets")
+  @@schema("aurelia")
+}

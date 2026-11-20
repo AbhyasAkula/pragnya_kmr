@@ -1,11 +1,11 @@
-/** Shared between the server action, the form UI and (future) admin/API consumers. */
+/** Shared between the API route, the form UI and (future) admin/API consumers. */
 import { addDays, isValidIsoDate } from "@/lib/dates";
 
 /** Site-visit booking fields. Order = focus order for the first invalid field. */
-export const siteVisitFields = ["name", "phone", "date", "villa", "message"] as const;
+export const siteVisitFields = ["name", "phone", "date", "villa", "message", "consent"] as const;
 export type SiteVisitField = (typeof siteVisitFields)[number];
 
-/** Limits mirrored as `maxLength` on the inputs. */
+/** Limits mirrored as `maxLength` on the inputs and as DB column sizes. */
 export const siteVisitLimits = {
   name: 80,
   phone: 20,
@@ -25,18 +25,55 @@ export type SiteVisitRequest = {
 
 export type SiteVisitState = {
   status: "idle" | "success" | "error";
-  /** true when the form ran without lead storage (nothing was sent or saved). */
-  demo?: boolean;
   message?: string;
   errors?: Partial<Record<SiteVisitField, string>>;
   values?: Partial<Record<SiteVisitField, string>>;
+  /** Show the call / WhatsApp alternatives (the request was not saved). */
+  fallback?: boolean;
+  /** Short booking reference, only once the database has saved the request. */
+  reference?: string;
 };
+
+/**
+ * JSON body of POST /api/site-visit. `company` is the honeypot; the
+ * idempotency key is generated once per form, so retries are not duplicated.
+ */
+export type SiteVisitPayload = Record<Exclude<SiteVisitField, "consent">, string> & {
+  consent: boolean;
+  company?: string;
+  idempotencyKey: string;
+  sourcePath?: string;
+};
+
+/** JSON response of POST /api/site-visit. Never contains other customers' data. */
+export type SiteVisitResponse =
+  | { status: "success"; message: string; reference: string }
+  | {
+      status: "error";
+      code: "invalid" | "duplicate" | "rate_limited" | "rejected" | "unavailable" | "bad_request";
+      message: string;
+      errors?: Partial<Record<SiteVisitField, string>>;
+      fallback?: boolean;
+    };
 
 /** Strips spaces, dashes, dots and brackets; keeps a leading "+". */
 export function normalizePhone(raw: string): string {
   const trimmed = raw.trim();
   const digits = trimmed.replace(/\D/g, "");
   return trimmed.startsWith("+") ? `+${digits}` : digits;
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export function isUuid(value: unknown): value is string {
+  return typeof value === "string" && UUID.test(value);
+}
+
+/** Accepts only a plain site path like "/contact" or "/villas/x"; anything else → null. */
+export function sanitizeSourcePath(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const path = value.trim();
+  if (path.length === 0 || path.length > 200) return null;
+  return /^\/[a-z0-9\-/]*$/i.test(path) && !path.startsWith("//") ? path : null;
 }
 
 type ValidationContext = {
@@ -51,12 +88,16 @@ export function validateSiteVisit(
   { today, villaOptions }: ValidationContext,
 ): { data: SiteVisitRequest } | { errors: Partial<Record<SiteVisitField, string>> } {
   const errors: Partial<Record<SiteVisitField, string>> = {};
-  const name = input.name.trim().replace(/\s+/g, " ");
+  // Collapse whitespace and drop control characters (keeps line breaks in the message).
+  const name = input.name.replace(/\p{Cc}/gu, " ").trim().replace(/\s+/g, " ");
   const rawPhone = input.phone.trim();
   const phone = normalizePhone(rawPhone);
   const date = input.date.trim();
   const villa = input.villa.trim();
-  const message = input.message.trim();
+  const message = input.message
+    .replace(/\r\n?/g, "\n")
+    .replace(/[^\P{Cc}\n\t]/gu, "")
+    .trim();
   const latest = addDays(today, siteVisitLimits.maxDaysAhead);
 
   if (name.length < 2 || name.length > siteVisitLimits.name || !/\p{L}/u.test(name)) {
@@ -86,6 +127,10 @@ export function validateSiteVisit(
 
   if (villa && !villaOptions.includes(villa)) {
     errors.villa = "Please choose a villa from the list.";
+  }
+
+  if (input.consent !== "on") {
+    errors.consent = "Please tick this box so we can contact you about your visit.";
   }
 
   if (Object.keys(errors).length > 0) return { errors };

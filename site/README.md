@@ -13,6 +13,10 @@ npm run start               # serve the production build
 npm run lint
 npm run typecheck
 npm run check:placeholders  # lists every placeholder still to replace; exits 1 until clean
+npm run db:migrate          # apply pending Prisma migrations (uses DIRECT_URL)
+npm run db:migrate:status   # compare migrations with the database
+npm run db:studio           # browse the database locally (never expose publicly)
+npm run test:api            # integration tests against a running server + real DB (see below)
 ```
 
 ## Environment
@@ -21,19 +25,39 @@ Copy `.env.example` to `.env.local`. `NEXT_PUBLIC_SITE_URL` is the production or
 unset the site emits **no canonical URLs**, an empty sitemap and a `noindex` robots policy, so preview
 builds are never indexed under a wrong domain. An invalid or non-https value fails the build.
 
-## Enquiry form (demo mode)
+## Site-visit bookings (backend)
 
-`siteConfig.features.leadStorageConnected` is `false`: the form validates input, then discards it and
-tells the visitor plainly that nothing was sent, with the phone number to call. Connect storage in
-`src/actions/site-visit.ts` (see `TODO(backend)`) — including rate limiting and bot protection — before
-flipping the flag.
+The "Book a Site Visit" form (homepage, villa pages, `/contact`) posts JSON to **`POST /api/site-visit`**
+(`src/app/api/site-visit/route.ts`), which stores the request in Supabase Postgres via Prisma 7.
+
+- **Storage:** table `aurelia.site_visit_requests` (schema `prisma/schema.prisma`, migrations in
+  `prisma/migrations/`). New requests are `NEW` — a request, never an auto-confirmed visit. Statuses:
+  NEW, CONTACTED, CONFIRMED, COMPLETED, CANCELLED.
+- **Privacy of the data:** tables live in the private `aurelia` schema, which Supabase's Data API does not
+  expose; `anon`/`authenticated` have no privileges and RLS is enabled. Only server code
+  (`src/lib/server/*`, guarded by `server-only`) touches the database. There is no endpoint that lists bookings.
+- **Abuse protection:** same-origin check, JSON-only, 8 KB body cap, honeypot, server-side validation,
+  Postgres-backed rate limits (per IP: 8/10 min and 30/day; per phone: 5/day; site-wide: 300/hour),
+  idempotency key (retries never duplicate) and a partial unique index (one open request per phone per date).
+- **Honest results:** success is shown only after the insert commits. Failures return 503 with the phone and
+  WhatsApp fallback; entered data is kept. Logs record event names and error codes only, never personal data.
+- **Kill switch:** `siteConfig.features.leadStorageConnected = false` makes the form say online booking is
+  unavailable and the API refuse submissions.
+- **Phase 3 (admin):** read and update leads through `src/lib/server/site-visits.ts`, behind authentication.
+
+Environment: `DATABASE_URL` (pooler, transaction mode, port 6543), `DIRECT_URL` (pooler, session mode,
+port 5432, `schema=aurelia`), `LEAD_HASH_SECRET`, and `DATABASE_SSL_CA` (recommended). See `.env.example`.
+
+**Tests:** `npm run build && npx next start -p 3200`, then `BASE_URL=http://localhost:3200 npm run test:api`.
+They write synthetic rows to the configured database and delete them afterwards. Optionally start a second
+server with an unreachable `DATABASE_URL` and pass it as `FAILING_BASE_URL` to test the failure path.
 
 ## Structure
 
 ```
 src/
   app/                    routes, root layout, globals.css (design tokens), sitemap, robots
-  actions/                server actions (site-visit enquiry)
+  app/api/site-visit/     booking endpoint (POST only)
   components/
     layout/               navbar, footer
     sections/home/        homepage sections
@@ -42,6 +66,10 @@ src/
   config/                 site.ts (brand/contact/SEO), navigation, fonts, motion tokens
   content/                placeholder copy + image URLs
   lib/                    data access layer, SEO helpers, validation, utils
+  lib/server/             server-only: Prisma client, lead storage, rate limiting, PII-safe logging
+  generated/prisma/       generated Prisma client (git-ignored; created on install/build)
+prisma/                   schema.prisma + SQL migrations
+tests/                    API integration tests
   types/                  content models
 ```
 
@@ -89,5 +117,5 @@ Set `NEXT_PUBLIC_SITE_URL` in production for correct canonical/OG/sitemap URLs.
 
 - Components receive data via async getters in `src/lib/data.ts`. Point these at a CMS, database or admin API without touching UI code.
 - Content shapes live in `src/types/content.ts`.
-- The site-visit form posts to `src/actions/site-visit.ts`; the `TODO(backend)` marks where to persist leads and notify sales. Validation is shared in `src/lib/validation/site-visit.ts`.
+- The site-visit form posts to `/api/site-visit`; leads are stored via `src/lib/server/site-visits.ts`. Validation is shared in `src/lib/validation/site-visit.ts`. Sales notifications (email/WhatsApp) are not built yet.
 - `robots.ts` already disallows `/admin` and `/api`.

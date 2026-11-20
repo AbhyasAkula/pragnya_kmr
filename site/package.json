@@ -4,18 +4,27 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit",
-    "check:placeholders": "node scripts/check-placeholders.mjs"
+    "typecheck": "prisma generate && tsc --noEmit",
+    "check:placeholders": "node scripts/check-placeholders.mjs",
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:migrate:status": "prisma migrate status",
+    "db:studio": "prisma studio",
+    "test:api": "node --test --test-concurrency=1 tests/site-visit-api.test.mjs"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "^7.10.1",
     "lucide-react": "^1.75.0",
     "motion": "^14.14.0",
     "next": "16.4.6",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "server-only": "^0.0.1",
     "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {
@@ -23,8 +32,11 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^18.0.10",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
+    "pg": "^8.23.1",
+    "prisma": "^7.10.1",
     "tailwindcss": "4.3.3",
     "typescript": "^5"
   }

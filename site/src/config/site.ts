@@ -70,11 +70,26 @@ export const siteConfig = {
   ],
   features: {
     /**
-     * false = the enquiry form runs in clearly-labelled DEMO mode: input is
-     * validated but nothing is stored or sent. Flip to true only once
-     * `src/actions/site-visit.ts` persists leads.
+     * true = the enquiry form posts to /api/site-visit, which stores the
+     * request in Postgres (src/lib/server/site-visits.ts) and shows success
+     * only after the database confirms the save.
+     * false = kill switch: the form says plainly that online booking is
+     * unavailable and the API refuses submissions (503).
      */
-    leadStorageConnected: false,
+    leadStorageConnected: true,
+  },
+  privacy: {
+    /**
+     * Identifies the consent wording shown next to the form; stored with each
+     * request. Bump it whenever that wording changes.
+     */
+    consentVersion: "site-visit-2026-11-19",
+    /**
+     * Client-supplied privacy policy. Set NEXT_PUBLIC_PRIVACY_POLICY_URL once
+     * the client's legally reviewed policy is published; the form links to
+     * it. Until then no policy link is shown (we do not invent one).
+     */
+    policyUrl: process.env.NEXT_PUBLIC_PRIVACY_POLICY_URL?.trim() || null,
   },
   /** Static so pages stay fully prerenderable under Cache Components. */
   copyrightYear: 2026,
